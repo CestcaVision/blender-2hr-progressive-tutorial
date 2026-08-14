@@ -64,8 +64,7 @@ node_types = [n.type for n in node_group.nodes]
 required_types = [
     "GROUP_INPUT",
     "GROUP_OUTPUT",
-    "OBJECT_INFO",
-    "MAP_RANGE"
+    "OBJECT_INFO"
 ]
 
 for req in required_types:

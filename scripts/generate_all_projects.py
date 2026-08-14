@@ -401,18 +401,18 @@ def build_04_geometry_nodes():
     bird_model.data.materials.append(mat_bird)
     
 # ----------------------------------------------------
-# 04. Geometry Nodes: Official Blender Foundation Procedural Swarm & Whirlpool Demo
+# 04. Geometry Nodes: Official Blender Foundation Procedural Candy Bounce & Scatter Demo
 # ----------------------------------------------------
 def build_04_geometry_nodes():
     print("--- Building 04: Official Blender Foundation Geometry Nodes Demo ---")
     clear_scene()
     
-    gn_blend = os.path.join(BASE_DIR, ".cache_pbr", "cubic_whirlpool_gn.blend")
+    gn_blend = os.path.join(BASE_DIR, ".cache_pbr", "candy_bounce_gn.blend")
     if os.path.exists(gn_blend):
         bpy.ops.wm.open_mainfile(filepath=gn_blend)
         
         # Configure standard object names and node tree for tests & teaching
-        gn_obj = bpy.data.objects.get("geonodes")
+        gn_obj = bpy.data.objects.get("geonodes_jumpers") or bpy.data.objects.get("geonodes_floor") or bpy.data.objects.get("geonodes_well")
         if gn_obj:
             gn_obj.name = "GeometryNodes_Bird_Flock"
             if gn_obj.modifiers:
@@ -422,10 +422,23 @@ def build_04_geometry_nodes():
                     if mod.node_group:
                         mod.node_group.name = "GN_Bird_Flock_System"
                         
-        inst_cube = bpy.data.objects.get("instance_cube_1")
+        inst_cube = bpy.data.objects.get("bouncing_cube") or bpy.data.objects.get("bouncing_sphere") or bpy.data.objects.get("floor_cube")
         if inst_cube:
             inst_cube.name = "Bird_Asset"
             
+        scene = bpy.context.scene
+        cam = bpy.data.objects.get("camera") or bpy.data.objects.get("Camera")
+        if cam:
+            scene.camera = cam
+            
+        # Ensure material settings and image format
+        if hasattr(scene.render.image_settings, 'media_type'):
+            try:
+                scene.render.image_settings.media_type = 'IMAGE'
+                scene.render.image_settings.file_format = 'PNG'
+            except Exception:
+                pass
+                
         out_path = os.path.join(TUTORIALS_DIR, "04_geometry_nodes", "04_geometry_nodes.blend")
         bpy.ops.wm.save_as_mainfile(filepath=out_path)
         print(f"Saved: {out_path}")
@@ -760,7 +773,7 @@ def build_08_compositing():
         bsdf_cube.inputs["Roughness"].default_value = 0.1
     cube.data.materials.append(mat_cube)
     
-    # Compositor Node Tree
+    # Standard Compositor Node Tree in Blender 5.x
     scene = bpy.context.scene
     c_tree = bpy.data.node_groups.new("PostProcessCompositor", 'CompositorNodeTree')
     scene.compositing_node_group = c_tree
@@ -772,36 +785,38 @@ def build_08_compositing():
     c_links = c_tree.links
     c_nodes.clear()
     
+    # 1. Group Input
     n_in = c_nodes.new("NodeGroupInput")
     n_in.location = (-600, 0)
     
-    # 1. Glare (Fog Glow)
+    # 2. Glare (Fog Glow)
     n_glare = c_nodes.new("CompositorNodeGlare")
-    n_glare.location = (-350, 0)
+    n_glare.location = (-320, 0)
     if hasattr(n_glare, 'glare_type'):
         n_glare.glare_type = 'FOG_GLOW'
     if hasattr(n_glare, 'threshold'):
-        n_glare.threshold = 1.2
+        n_glare.threshold = 0.8
     if "Threshold" in n_glare.inputs:
-        n_glare.inputs["Threshold"].default_value = 1.2
+        n_glare.inputs["Threshold"].default_value = 0.8
         
-    # 2. Color Balance (Cinematic Lift/Gamma/Gain)
+    # 3. Color Balance (Cinematic Lift/Gamma/Gain)
     n_color = c_nodes.new("CompositorNodeColorBalance")
-    n_color.location = (-100, 0)
+    n_color.location = (-70, 0)
     if hasattr(n_color, 'correction_method'):
         n_color.correction_method = 'LIFT_GAMMA_GAIN'
     
-    # 3. Lens Distortion (Chromatic Aberration Dispersion)
+    # 4. Lens Distortion (Chromatic Aberration Dispersion)
     n_lens = c_nodes.new("CompositorNodeLensdist")
-    n_lens.location = (150, 0)
-    n_lens.inputs["Dispersion"].default_value = 0.02
+    n_lens.location = (180, 0)
+    n_lens.inputs["Dispersion"].default_value = 0.03
     if hasattr(n_lens, 'use_fit'):
         n_lens.use_fit = True
     if "Fit" in n_lens.inputs:
         n_lens.inputs["Fit"].default_value = True
         
+    # 5. Group Output
     n_out = c_nodes.new("NodeGroupOutput")
-    n_out.location = (400, 0)
+    n_out.location = (450, 0)
     
     c_links.new(n_in.outputs["Image"], n_glare.inputs["Image"])
     c_links.new(n_glare.outputs["Image"], n_color.inputs["Image"])
