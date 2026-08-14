@@ -41,8 +41,7 @@ import sys
 # Verify sculpt object and stand
 expected_objects = [
     "Sculpt_Organic_Relic",
-    "Display_Stand_Base",
-    "Display_Stand_Pillar"
+    "Display_Stand_Base"
 ]
 
 for name in expected_objects:

@@ -1,26 +1,30 @@
-# 模块 02：雕刻与有机形态 (Sculpting & Organic Modeling)
+# 模块 02：有机形态与数字雕刻 (Organic Sculpting & Multiresolution)
 
 ## 📌 课程目标 (Duration: ~15 mins)
-本模块通过制作一件**古代遗迹徽章/浮雕勋章 (Organic Medallion Relic)**，讲解 Blender 雕刻模式的核心笔刷动态、体素重构网格 (Voxel Remesh)、动态拓扑 (Dyntopo) 以及多级精度修改器 (Multiresolution Modifier) 的运用。
+本模块引入 **Poly Haven CC0 工业级写实大理石古典雕刻半身像 (Classical Carved Marble Bust)**，让学员直观感受专业高精度有机雕刻资产的布线拓扑、解剖学结构与微表面细节。系统掌握 Blender 的 **Multiresolution (多级精度修改器)**、动态笔刷系统（粘土条 Clay Strips、折痕 Crease、膨胀 Inflate、抓取 Grab）以及 X 轴对称雕刻与法线细节烘焙准备流程。
 
 ---
 
 ## 📂 工程文件信息
-- **工程路径**：`tutorials/02_sculpting/02_sculpting.blend`
+- **工程路径**：`tutorials/02_sculpting/02_sculpting.blend` (打开即就绪于 **Sculpt Mode 雕刻模式**，全内嵌打包大理石 PBR 贴图)
 - **主要对象结构**：
-  - `Sculpt_Organic_Relic`：雕刻主体，已挂载 3 级细分的多级精度修改器 (Multiresolution)
-  - `Display_Stand_Base` / `Display_Stand_Pillar`：展示台基座
+  - `Sculpt_Organic_Relic`：**核心写实雕刻半身像**（挂载 Multiresolution 修改器，开箱即可进行高频微细节雕刻）
+  - `Display_Stand_Base`：摄影棚古典展台底座
 
 ---
 
 ## 🛠 核心功能与技术点拆解
 
-### 1. 雕刻工作区与基础笔刷组
-- **Draw / Clay Strips (粘土条笔刷 - `X`)**：用于大体积的形体塑造与快速堆叠泥层。
-- **Crease (折痕笔刷 - `Shift + C`)**：快速拉出锐利的凹槽、刻线与硬边缘褶皱。
-- **Inflate (膨胀笔刷 - `I`)**：向表面法线方向均匀充气膨胀。
-- **Grab / Snake Hook (抓取/蛇钩笔刷 - `G` / `K`)**：大范围拉伸外轮廓形态与角/触须结构。
-- **Smooth (平滑 - 按住 `Shift`)**：任意笔刷下按住 `Shift` 即可快速平滑过渡。
+### 1. 雕刻核心笔刷族谱 (Essential Sculpt Brushes)
+
+```mermaid
+graph TD
+    Sculpt["Blender 雕刻笔刷体系"] --> Clay["Clay Strips (粘土条 - X)\n堆叠肌肉与五官结构大形"]
+    Sculpt --> Crease["Crease (折痕 - Shift+C)\n压实眼眶、唇缝与衣褶深邃阴影"]
+    Sculpt --> Inflate["Inflate (膨胀 - I)\n局部体积自然充气外凸"]
+    Sculpt --> Grab["Grab (抓取 - G)\n大范围拉拽微调外轮廓"]
+    Sculpt --> Smooth["Smooth (平滑 - 按住 Shift)\n柔化平复泥块之间的过渡接缝"]
+```
 
 ### 2. 拓扑控制策略对比
 - **Voxel Remesh (体素重构)**：

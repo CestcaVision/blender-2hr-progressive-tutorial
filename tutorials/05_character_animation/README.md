@@ -1,16 +1,17 @@
-# 模块 05：人物动画、骨骼绑定与面部形态键 (Character Animation, Rigging & Shape Keys)
+# 模块 05：角色动画、骨骼装配与面部形态键 (Character Animation, Armature Rigging & Shape Keys)
 
-## 📌 课程目标 (Duration: ~20 mins)
-本模块通过制作一个**风格化卡通角色 (Stylized Animated Character)**，系统讲解角色骨骼搭建 (Armature)、姿态模式 (Pose Mode) 关键帧动画、权重绘制原理 (Weight Painting)，以及使用**形态键 (Shape Keys)** 驱动丰富的面部表情（眨眼、微笑、张嘴发音、惊讶）。
+## 📌 课程目标 (Duration: ~15 mins)
+本模块引入 **Blender 官方开源项目基础拓扑人头资产 (Blender Foundation Human Base Meshes - Stylized Character Head)**，让学员接触真正符合工业级循环边拓扑（Edge Loops）的面部资产。系统学习在生产级角色上构建 **Armature 骨架装配**、姿态模式 (Pose Mode) 摆姿动效、4 组核心**面部表情形态键 (Facial Shape Keys: 眨眼/微笑/张嘴/惊讶)** 以及时间线曲线混合控制。
 
 ---
 
 ## 📂 工程文件信息
 - **工程路径**：`tutorials/05_character_animation/05_character_animation.blend`
 - **主要对象结构**：
-  - `Char_Head`：头部网格，内嵌 4 组面部形态键（`Basis`, `Blink`, `Smile`, `OpenMouth`, `Surprise`）
-  - `Char_Torso` / `Char_Arm_L` / `Char_Arm_R` / `Char_Leg_L` / `Char_Leg_R`：身体部位网格
-  - `Char_Armature`：角色主骨骼架构（包含 Root、Spine、Chest、Head、Arm.L/R、Leg.L/R）
+  - `Char_Head`：**官方标准环形拓扑角色人头**（包含 `Basis`, `Blink`, `Smile`, `OpenMouth`, `Surprise` 5 组形态键）
+  - `Char_Eye_L` / `Char_Eye_R`：官方写实眼球眼眶
+  - `Char_Torso`, `Char_Arm_L`/`R`, `Char_Leg_L`/`R`：机械/躯干肢体组件
+  - `Char_Armature`：包含 7 根骨骼（Root, Chest, Head, Arm_L, Arm_R, Leg_L, Leg_R）的关节骨架体系
 - **时间线预设**：第 1~120 帧已包含一段挥手动作与表情情绪转换的关键帧动画。
 
 ---

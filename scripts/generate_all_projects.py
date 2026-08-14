@@ -143,46 +143,87 @@ def build_01_modeling():
     render_preview("01_modeling.png")
 
 # ----------------------------------------------------
-# 02. Sculpting: Fantasy Medallion / Relic
+# 02. Sculpting & Organic Form: Classical Marble Bust
 # ----------------------------------------------------
 def build_02_sculpting():
-    print("--- Building 02: Sculpting & Organic Form ---")
+    print("--- Building 02: Sculpting & Organic Form (Classical Marble Bust) ---")
     clear_scene()
-    setup_basic_camera_and_light(cam_loc=(0, -3.2, 1.5), cam_rot=(math.radians(72), 0, 0), light_loc=(2.5, -3, 3.5))
+    setup_basic_camera_and_light(cam_loc=(0, -3.2, 1.2), cam_rot=(math.radians(80), 0, 0), light_loc=(2.5, -2.5, 3.0))
     
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=32, radius=1.0, location=(0, 0, 0.8))
-    sculpt_obj = bpy.context.active_object
-    sculpt_obj.name = "Sculpt_Organic_Relic"
-    sculpt_obj.scale = (1.1, 0.35, 1.4)
-    bpy.ops.object.transform_apply(scale=True)
+    # 1. Import Hero CC0 Sculpted Marble Bust
+    cache_blend = os.path.join(BASE_DIR, ".cache_pbr", "marble_bust_01_1k.blend")
+    tex_dir = os.path.join(BASE_DIR, ".cache_pbr", "textures")
     
-    multires = sculpt_obj.modifiers.new("Multiresolution", 'MULTIRES')
-    bpy.ops.object.multires_subdivide(modifier="Multiresolution", mode='CATMULL_CLARK')
-    bpy.ops.object.multires_subdivide(modifier="Multiresolution", mode='CATMULL_CLARK')
-    bpy.ops.object.multires_subdivide(modifier="Multiresolution", mode='CATMULL_CLARK')
+    if os.path.exists(cache_blend):
+        with bpy.data.libraries.load(cache_blend, link=False) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name == "marble_bust_01"]
+            
+        for obj in data_to.objects:
+            if obj:
+                bpy.context.scene.collection.objects.link(obj)
+                obj.name = "Sculpt_Organic_Relic"
+                obj.location = (0, 0, 0)
+                obj.scale = (2.2, 2.2, 2.2)
+                
+                # Add Multiresolution Modifier for organic detail sculpting
+                multires = obj.modifiers.new("Multiresolution", 'MULTIRES')
+                bpy.context.view_layer.objects.active = obj
+                obj.select_set(True)
+                try:
+                    bpy.ops.object.multires_subdivide(modifier="Multiresolution", mode='CATMULL_CLARK')
+                except Exception as e:
+                    print("Multires subdivide notice:", e)
+                    
+                # Ensure material textures are cleanly linked
+                mat = bpy.data.materials.get("marble_bust_01")
+                if mat and mat.node_tree:
+                    nodes = mat.node_tree.nodes
+                    links = mat.node_tree.links
+                    bsdf = nodes.get("Principled BSDF")
+                    if bsdf:
+                        def wire_tex(filename, color_space, target_socket, is_normal=False):
+                            img_path = os.path.join(tex_dir, filename)
+                            if os.path.exists(img_path):
+                                img = bpy.data.images.load(img_path, check_existing=True)
+                                img.colorspace_settings.name = color_space
+                                tnode = nodes.new("ShaderNodeTexImage")
+                                tnode.image = img
+                                if is_normal:
+                                    nnode = nodes.new("ShaderNodeNormalMap")
+                                    links.new(tnode.outputs["Color"], nnode.inputs["Color"])
+                                    links.new(nnode.outputs["Normal"], bsdf.inputs["Normal"])
+                                else:
+                                    links.new(tnode.outputs["Color"], bsdf.inputs[target_socket])
+                                    
+                        wire_tex("marble_bust_01_diff_1k.jpg", "sRGB", "Base Color")
+                        wire_tex("marble_bust_01_rough_1k.jpg", "Non-Color", "Roughness")
+                        wire_tex("marble_bust_01_nor_gl_1k.exr", "Non-Color", "Normal", is_normal=True)
     
-    # Stand
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.8, depth=0.2, location=(0, 0, 0.1))
-    stand_base = bpy.context.active_object
-    stand_base.name = "Display_Stand_Base"
+    # 2. Studio Plinth / Base Stand
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.7, depth=0.3, location=(0, 0, -0.15))
+    stand = bpy.context.active_object
+    stand.name = "Display_Stand_Base"
+    mat_stand = bpy.data.materials.new(name="M_Display_Stand")
+    bsdf_stand = mat_stand.node_tree.nodes.get("Principled BSDF")
+    if bsdf_stand:
+        bsdf_stand.inputs["Base Color"].default_value = (0.04, 0.04, 0.05, 1.0)
+        bsdf_stand.inputs["Roughness"].default_value = 0.4
+    stand.data.materials.append(mat_stand)
     
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.12, depth=0.7, location=(0, 0, 0.45))
-    stand_pole = bpy.context.active_object
-    stand_pole.name = "Display_Stand_Pillar"
-    
-    mat_relic = bpy.data.materials.new(name="M_Ancient_Stone")
-    bsdf_r = mat_relic.node_tree.nodes.get("Principled BSDF")
-    if bsdf_r:
-        bsdf_r.inputs["Base Color"].default_value = (0.45, 0.42, 0.38, 1.0)
-        bsdf_r.inputs["Roughness"].default_value = 0.8
-    sculpt_obj.data.materials.append(mat_relic)
-    
-    bpy.context.view_layer.objects.active = sculpt_obj
-    sculpt_obj.select_set(True)
+    # 3. Pack all image textures inside the .blend file
     try:
-        bpy.ops.object.mode_set(mode='SCULPT')
+        bpy.ops.file.pack_all()
     except Exception as e:
-        print("Set sculpt mode notice:", e)
+        print("Pack images notice:", e)
+        
+    sculpt_obj = bpy.data.objects.get("Sculpt_Organic_Relic")
+    if sculpt_obj:
+        bpy.context.view_layer.objects.active = sculpt_obj
+        sculpt_obj.select_set(True)
+        try:
+            bpy.ops.object.mode_set(mode='SCULPT')
+        except Exception as e:
+            print("Set sculpt mode notice:", e)
     
     out_path = os.path.join(TUTORIALS_DIR, "02_sculpting", "02_sculpting.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
@@ -452,46 +493,91 @@ def build_05_character_animation():
     clear_scene()
     setup_basic_camera_and_light(cam_loc=(0, -4.5, 1.6), cam_rot=(math.radians(78), 0, 0), light_loc=(2.5, -3, 3))
     
-    # Head with Facial Shape Keys
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.45, location=(0, 0, 1.7))
-    head = bpy.context.active_object
-    head.name = "Char_Head"
+    # 1. Import Official Blender Foundation Human Head Base Mesh
+    cache_blend = os.path.join(BASE_DIR, ".cache_pbr", "human_base_meshes", "human-base-meshes-bundle-v1.4.1", "human_base_meshes_bundle.blend")
+    head = None
+    eye_l = None
+    eye_r = None
+    
+    if os.path.exists(cache_blend):
+        with bpy.data.libraries.load(cache_blend, link=False) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name in ["GEO-head_stylized", "GEO-head_stylized.eye.L", "GEO-head_stylized.eye.R"]]
+            
+        for obj in data_to.objects:
+            if obj:
+                bpy.context.scene.collection.objects.link(obj)
+                # Clear existing invalid drivers/modifiers from source bundle
+                obj.animation_data_clear()
+                obj.modifiers.clear()
+                
+                if obj.name == "GEO-head_stylized":
+                    head = obj
+                    head.name = "Char_Head"
+                    head.location = (0, 0, 1.45)
+                    head.scale = (1.6, 1.6, 1.6)
+                elif "eye.L" in obj.name:
+                    eye_l = obj
+                    eye_l.name = "Char_Eye_L"
+                    eye_l.location = (0, 0, 1.45)
+                    eye_l.scale = (1.6, 1.6, 1.6)
+                elif "eye.R" in obj.name:
+                    eye_r = obj
+                    eye_r.name = "Char_Eye_R"
+                    eye_r.location = (0, 0, 1.45)
+                    eye_r.scale = (1.6, 1.6, 1.6)
+                    
+        if head:
+            bpy.context.view_layer.objects.active = head
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            if eye_l:
+                bpy.context.view_layer.objects.active = eye_l
+                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            if eye_r:
+                bpy.context.view_layer.objects.active = eye_r
+                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                
+    if not head:
+        # Fallback if bundle not present
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.45, location=(0, 0, 1.75))
+        head = bpy.context.active_object
+        head.name = "Char_Head"
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(-0.16, -0.4, 1.75))
+        eye_l = bpy.context.active_object
+        eye_l.name = "Char_Eye_L"
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(0.16, -0.4, 1.75))
+        eye_r = bpy.context.active_object
+        eye_r.name = "Char_Eye_R"
+        
+    bpy.context.view_layer.objects.active = head
     bpy.ops.object.shade_smooth()
     
+    # 4 Facial Shape Keys: Blink, Smile, OpenMouth, Surprise
     head.shape_key_add(name="Basis")
     sk_blink = head.shape_key_add(name="Blink")
     sk_smile = head.shape_key_add(name="Smile")
     sk_mouth_open = head.shape_key_add(name="OpenMouth")
     sk_surprise = head.shape_key_add(name="Surprise")
     
+    # Procedural offsets on head vertices for facial expressions
     for v in sk_blink.data:
-        if v.co.y < 0 and abs(v.co.z - 1.7) < 0.15:
-            v.co.z = 1.7 + (v.co.z - 1.7) * 0.1
+        if abs(v.co.x) > 0.04 and abs(v.co.x) < 0.22 and v.co.y < -0.05 and v.co.z > 0.02 and v.co.z < 0.25:
+            v.co.z -= 0.04
             
     for v in sk_smile.data:
-        if v.co.y < -0.1 and v.co.z < 1.6:
-            v.co.z += 0.08 * (1.0 - abs(v.co.x))
-            v.co.x *= 1.2
+        if abs(v.co.x) > 0.04 and abs(v.co.x) < 0.2 and v.co.y < -0.05 and v.co.z < -0.02 and v.co.z > -0.2:
+            v.co.z += 0.035
+            v.co.y -= 0.015
             
     for v in sk_mouth_open.data:
-        if v.co.y < -0.1 and v.co.z < 1.65:
-            v.co.z -= 0.12
-            v.co.y -= 0.05
+        if abs(v.co.x) < 0.15 and v.co.y < -0.02 and v.co.z < -0.05:
+            v.co.z -= 0.06
+            v.co.y -= 0.02
             
     for v in sk_surprise.data:
-        if v.co.z > 1.7:
-            v.co.z += 0.1
-        if v.co.y < -0.1 and v.co.z < 1.6:
-            v.co.z -= 0.08
-            
-    # Eyes
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(-0.16, -0.4, 1.75))
-    eye_l = bpy.context.active_object
-    eye_l.name = "Char_Eye_L"
-    
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(0.16, -0.4, 1.75))
-    eye_r = bpy.context.active_object
-    eye_r.name = "Char_Eye_R"
+        if v.co.z > 0.12 and abs(v.co.x) < 0.25 and v.co.y < -0.05:
+            v.co.z += 0.04
+        if abs(v.co.x) < 0.12 and v.co.y < -0.02 and v.co.z < -0.05:
+            v.co.z -= 0.05
     
     # Torso
     bpy.ops.mesh.primitive_cube_add(size=0.6, location=(0, 0, 1.05))
@@ -589,6 +675,8 @@ def build_05_character_animation():
     b_leg_r.tail = (0.2, 0, 0.0)
     b_leg_r.parent = b_root
     
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
     # Bone Parenting for articulated character hierarchy
     head.parent = rig
     head.parent_type = 'BONE'
@@ -616,8 +704,6 @@ def build_05_character_animation():
     leg_r.parent = rig
     leg_r.parent_type = 'BONE'
     leg_r.parent_bone = 'Leg_R'
-    
-    bpy.ops.object.mode_set(mode='OBJECT')
     
     # Keyframes: Facial Shape Keys (Frames 1-120)
     sk_blink.value = 0.0
@@ -780,23 +866,38 @@ def build_07_lighting_rendering():
     scene.render.engine = 'BLENDER_EEVEE'
     scene.render.film_transparent = False
     
-    # Hero Object: Crystal Sculpture
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1.0, location=(0, 0, 1.2))
-    hero = bpy.context.active_object
-    hero.name = "Hero_Crystal_Sculpture"
-    bpy.ops.object.shade_flat()
-    
-    mat_hero = bpy.data.materials.new(name="M_Hero_Crystal")
+    # Hero Subject (Classical Marble Bust LookDev Subject)
+    cache_blend = os.path.join(BASE_DIR, ".cache_pbr", "marble_bust_01_1k.blend")
+    hero = None
+    if os.path.exists(cache_blend):
+        with bpy.data.libraries.load(cache_blend, link=False) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name == "marble_bust_01"]
+        for obj in data_to.objects:
+            if obj:
+                bpy.context.scene.collection.objects.link(obj)
+                hero = obj
+                hero.name = "Hero_Crystal_Sculpture"
+                hero.location = (0, 0, 0.4)
+                hero.scale = (2.2, 2.2, 2.2)
+                
+    if not hero:
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1.0, location=(0, 0, 1.2))
+        hero = bpy.context.active_object
+        hero.name = "Hero_Crystal_Sculpture"
+        bpy.ops.object.shade_smooth()
+        
+    mat_hero = bpy.data.materials.new(name="M_LookDev_Crystal")
     bsdf_hero = mat_hero.node_tree.nodes.get("Principled BSDF")
     if bsdf_hero:
-        bsdf_hero.inputs["Base Color"].default_value = (0.1, 0.6, 0.95, 1.0)
+        bsdf_hero.inputs["Base Color"].default_value = (0.9, 0.95, 1.0, 1.0)
         bsdf_hero.inputs["Roughness"].default_value = 0.05
         bsdf_hero.inputs["IOR"].default_value = 1.65
         if "Transmission Weight" in bsdf_hero.inputs:
             bsdf_hero.inputs["Transmission Weight"].default_value = 0.95
         elif "Transmission" in bsdf_hero.inputs:
             bsdf_hero.inputs["Transmission"].default_value = 0.95
-    hero.data.materials.append(mat_hero)
+    if len(hero.data.materials) == 0:
+        hero.data.materials.append(mat_hero)
     
     # Studio Backdrop (Seamless Curved Infinity Cove)
     bpy.ops.mesh.primitive_plane_add(size=16, location=(0, 0, 0))
