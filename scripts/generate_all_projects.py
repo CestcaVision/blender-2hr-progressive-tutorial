@@ -686,6 +686,20 @@ def build_06_physics():
     bpy.ops.rigidbody.object_add()
     floor.rigid_body.type = 'PASSIVE'
     
+    # Materials for Physics Scene
+    mat_floor = bpy.data.materials.new(name="M_Physics_Floor")
+    bsdf_floor = mat_floor.node_tree.nodes.get("Principled BSDF")
+    if bsdf_floor:
+        bsdf_floor.inputs["Base Color"].default_value = (0.08, 0.09, 0.11, 1.0)
+        bsdf_floor.inputs["Roughness"].default_value = 0.5
+    floor.data.materials.append(mat_floor)
+    
+    mat_domino = bpy.data.materials.new(name="M_Domino_Active")
+    bsdf_domino = mat_domino.node_tree.nodes.get("Principled BSDF")
+    if bsdf_domino:
+        bsdf_domino.inputs["Base Color"].default_value = (0.85, 0.15, 0.15, 1.0)
+        bsdf_domino.inputs["Roughness"].default_value = 0.25
+        
     for i in range(8):
         y_pos = -2.5 + i * 0.65
         bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, y_pos, 0.45))
@@ -697,6 +711,7 @@ def build_06_physics():
         domino.rigid_body.type = 'ACTIVE'
         domino.rigid_body.mass = 1.0
         domino.rigid_body.friction = 0.5
+        domino.data.materials.append(mat_domino)
         
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.35, location=(0, -3.2, 1.2))
     ball = bpy.context.active_object
@@ -704,11 +719,24 @@ def build_06_physics():
     bpy.ops.rigidbody.object_add()
     ball.rigid_body.type = 'ACTIVE'
     ball.rigid_body.mass = 5.0
+    mat_ball = bpy.data.materials.new(name="M_Trigger_Ball")
+    bsdf_ball = mat_ball.node_tree.nodes.get("Principled BSDF")
+    if bsdf_ball:
+        bsdf_ball.inputs["Base Color"].default_value = (0.9, 0.6, 0.2, 1.0)
+        bsdf_ball.inputs["Metallic"].default_value = 1.0
+        bsdf_ball.inputs["Roughness"].default_value = 0.2
+    ball.data.materials.append(mat_ball)
     
     bpy.ops.mesh.primitive_cylinder_add(radius=0.4, depth=1.2, location=(2.8, 0, 0.6))
     table = bpy.context.active_object
     table.name = "Cloth_Collision_Pillar"
     bpy.ops.object.modifier_add(type='COLLISION')
+    mat_pillar = bpy.data.materials.new(name="M_Collision_Pillar")
+    bsdf_pillar = mat_pillar.node_tree.nodes.get("Principled BSDF")
+    if bsdf_pillar:
+        bsdf_pillar.inputs["Base Color"].default_value = (0.7, 0.72, 0.75, 1.0)
+        bsdf_pillar.inputs["Roughness"].default_value = 0.3
+    table.data.materials.append(mat_pillar)
     
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=24, y_subdivisions=24, size=1.5, location=(2.8, 0, 1.5))
     cloth = bpy.context.active_object
@@ -721,6 +749,17 @@ def build_06_physics():
     
     subdiv = cloth.modifiers.new("Subdivision", 'SUBSURF')
     subdiv.levels = 1
+    
+    mat_cloth = bpy.data.materials.new(name="M_Simulated_Cloth")
+    bsdf_cloth = mat_cloth.node_tree.nodes.get("Principled BSDF")
+    if bsdf_cloth:
+        bsdf_cloth.inputs["Base Color"].default_value = (0.1, 0.6, 0.8, 1.0)
+        bsdf_cloth.inputs["Roughness"].default_value = 0.4
+        if "Sheen Weight" in bsdf_cloth.inputs:
+            bsdf_cloth.inputs["Sheen Weight"].default_value = 1.0
+        elif "Sheen" in bsdf_cloth.inputs:
+            bsdf_cloth.inputs["Sheen"].default_value = 1.0
+    cloth.data.materials.append(mat_cloth)
     
     bpy.context.scene.frame_end = 150
     out_path = os.path.join(TUTORIALS_DIR, "06_physics", "06_physics.blend")
