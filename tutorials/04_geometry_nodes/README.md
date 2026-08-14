@@ -38,6 +38,34 @@ graph LR
 
 ---
 
+## 📝 完整分步实战构建指南 (Step-by-Step Walkthrough)
+
+### 步骤 1：创建飞鸟实例低模 (Bird Instance Asset)
+1. 按 `Shift + A` -> `Mesh` -> `Cone`（圆锥体，顶点数 6），旋转 90 度作为鸟身。
+2. 新建一个扁平平面 `Plane`，横向拉长作为翅膀，与鸟身 `Ctrl + J` 合并为 `Bird_Asset`。
+3. 赋予深色羽毛基础材质 `M_Bird_Feathers`，并将其移动到视口远离相机的位置作为源资产模板。
+
+### 步骤 2：创建几何节点生成器 (Flock Generator Object)
+1. 按 `Shift + A` -> `Mesh` -> `Grid`（网格面片），命名为 `GeometryNodes_Bird_Flock`。
+2. 切换到顶部 **Geometry Nodes** 工作区，点击 **New (新建节点组)**，重命名为 `GN_Bird_Flock_System`。
+
+### 步骤 3：空间离散点分发与空间包围盒 (Bounding Cube & Point Distribution)
+1. 在节点编辑器中按 `Shift + A` 搜索并添加 **Cube (网格立方体)**，设置尺寸 `Size: X 14, Y 10, Z 5`，作为鸟群活动的三维空间范围。
+2. 添加 **Distribute Points on Faces (在面上分发点)** 节点，连接到 Cube 的 Mesh 输出，将 `Density (密度)` 设为 `1.2`。
+
+### 步骤 4：时间驱动与三维噪波位移场 (Scene Time + Noise Field)
+1. 添加 **Scene Time (场景时间)** 节点，获取时间线实时推移的 `Seconds (秒)`。
+2. 添加 **Noise Texture (噪波纹理)** 节点，将 `Scene Time -> Seconds` 连接至噪波的 `Scale`（或 4D 噪波的 `W` 轴）。
+3. 添加 **Set Position (设置位置)** 节点，将噪波的 `Color` 矢量输出连接到 `Set Position -> Offset (偏移量)`。
+4. 按空格键 `Space` 播放时间线，即可看到空间点云像流体/风暴一样开始优雅起伏流动！
+
+### 步骤 5：批量实例化与随机比例 (Instance on Points & Scale)
+1. 添加 **Instance on Points (在点上生成实例)** 节点，连接在 `Set Position` 之后。
+2. 添加 **Object Info (物体信息)** 节点，选择 `Bird_Asset`，勾选 `As Instance`，将 `Geometry` 连接至 `Instance` 输入端。
+3. 添加 **Scale Instances (缩放实例)** 节点，将整体比例设为 `0.5`，实现海量轻量化低模鸟群翱翔。
+
+---
+
 ## ⌨️ 常用快捷键速查表
 
 | 操作 | 快捷键 | 功能说明 |
@@ -50,7 +78,7 @@ graph LR
 
 ---
 
-## 💡 实践步骤与练习建议
+## 💡 实践步骤与课后练习
 1. 打开 `04_geometry_nodes.blend`，按下空格键 `Space` 播放时间线。
 2. 观察视口中鸟群如何在三维空间中受噪波场影响流动翱翔。
 3. 尝试在节点树中添加一个 **Random Value** 节点并连接到 `Scale Instances` 的 `Scale` 输入，实现每只鸟大小各异的自然效果。
