@@ -179,6 +179,10 @@ def build_02_sculpting():
     
     bpy.context.view_layer.objects.active = sculpt_obj
     sculpt_obj.select_set(True)
+    try:
+        bpy.ops.object.mode_set(mode='SCULPT')
+    except Exception as e:
+        print("Set sculpt mode notice:", e)
     
     out_path = os.path.join(TUTORIALS_DIR, "02_sculpting", "02_sculpting.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)

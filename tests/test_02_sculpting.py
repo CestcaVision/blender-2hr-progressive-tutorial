@@ -74,7 +74,12 @@ sys.exit(0)
         res = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, f"Blender scene inspection failed:\n{res.stderr}\n{res.stdout}")
 
-    def test_04_dynamic_headless_render(self):
+    def test_04_render_preview_integrity(self):
+        """Verify committed render preview exists and has valid image size."""
+        self.assertTrue(os.path.isfile(RENDER_PNG), f"Render output {RENDER_PNG} must exist")
+        self.assertGreater(os.path.getsize(RENDER_PNG), 10000, "Render output should be a valid PNG image")
+
+    def test_05_dynamic_headless_render(self):
         """Verify 02_sculpting.blend renders dynamically without errors via Blender CLI."""
         test_out = os.path.join(BASE_DIR, "renders", "test_02_sculpting_dynamic.png")
         if os.path.exists(test_out):
