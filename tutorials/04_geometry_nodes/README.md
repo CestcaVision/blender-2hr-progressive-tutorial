@@ -15,16 +15,18 @@
 
 ## 🛠 核心功能与技术点拆解
 
-### 1. 几何节点核心管道流程
+### 1. 几何节点核心管道流程 (4D 噪波场流体飞行动画)
 ```mermaid
 graph LR
-    Cube["Mesh Cube\n(生成空间包围盒)"] --> Distribute["Distribute Points on Faces\n(表面分发离散点)"]
-    Distribute --> SetPos["Set Position\n(通过噪波驱动飞行抖动)"]
-    SceneTime["Scene Time\n(时间输入驱动动力学)"] --> Noise["Noise Texture\n(空间噪波场)"]
-    Noise --> SetPos
+    Cube["Mesh Cube\n(生成空间包围盒)"] --> Distribute["Distribute Points on Faces\n(分发离散三维点云)"]
+    Distribute --> SetPos["Set Position\n(通过 4D 噪波场驱动群鸟位移)"]
+    SceneTime["Scene Time\n(实时秒数输入)"] --> MathSpeed["Math (Multiply)\n(飞行扰动速率调节)"]
+    MathSpeed --> Noise4D["Noise Texture (4D)\n(随时间 W 轴演进的连续流体场)"]
+    Noise4D --> VectorMath["Vector Math (Scale)\n(位移幅度缩放)"]
+    VectorMath --> SetPos
     SetPos --> Instance["Instance on Points\n(在每个离散点上实例化飞鸟)"]
     BirdMesh["Bird_Asset (Object Info)"] --> Instance
-    Instance --> Scale["Scale Instances\n(随机大小变化)"]
+    Instance --> Scale["Scale Instances\n(鸟群大小比例微调)"]
     Scale --> Output["Group Output\n(最终几何体输出)"]
 ```
 

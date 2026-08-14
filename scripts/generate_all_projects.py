@@ -324,7 +324,7 @@ def build_03_shading():
 # 04. Geometry Nodes: Bird Flock Simulation
 # ----------------------------------------------------
 def build_04_geometry_nodes():
-    print("--- Building 04: Geometry Nodes Bird Flock ---")
+    print("--- Building 04: Geometry Nodes Bird Flock (4D Volume Flight) ---")
     clear_scene()
     setup_basic_camera_and_light(cam_loc=(0, -14, 6), cam_rot=(math.radians(72), 0, 0), light_loc=(6, -10, 10))
     
@@ -355,7 +355,7 @@ def build_04_geometry_nodes():
     bird_model.data.materials.append(mat_bird)
     
     # 2. Flock Generator Object
-    bpy.ops.mesh.primitive_grid_add(x_subdivisions=2, y_subdivisions=2, size=1.0, location=(0, 0, 2))
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 2))
     flock_obj = bpy.context.active_object
     flock_obj.name = "GeometryNodes_Bird_Flock"
     
@@ -371,51 +371,73 @@ def build_04_geometry_nodes():
     nodes.clear()
     
     n_in = nodes.new("NodeGroupInput")
-    n_in.location = (-700, 0)
+    n_in.location = (-800, 0)
     
     n_out = nodes.new("NodeGroupOutput")
-    n_out.location = (600, 0)
+    n_out.location = (700, 0)
     
+    # Volume Generation & Point Distribution in 3D Space
     n_cube = nodes.new("GeometryNodeMeshCube")
-    n_cube.location = (-500, 100)
+    n_cube.location = (-600, 150)
     n_cube.inputs["Size"].default_value = (14.0, 10.0, 5.0)
     
     n_dist = nodes.new("GeometryNodeDistributePointsOnFaces")
-    n_dist.location = (-300, 100)
-    n_dist.inputs["Density"].default_value = 1.2
+    n_dist.location = (-350, 150)
+    n_dist.inputs["Density"].default_value = 1.5
     
+    # Set Position & 4D Fluid Flight Turbulence Field
     n_time = nodes.new("GeometryNodeInputSceneTime")
-    n_time.location = (-500, -200)
+    n_time.location = (-600, -150)
     
-    n_pos = nodes.new("GeometryNodeSetPosition")
-    n_pos.location = (-50, 100)
+    n_math_time = nodes.new("ShaderNodeMath")
+    n_math_time.location = (-400, -150)
+    n_math_time.operation = 'MULTIPLY'
+    n_math_time.inputs[1].default_value = 0.5  # Time speed control
     
     n_noise = nodes.new("ShaderNodeTexNoise")
-    n_noise.location = (-250, -200)
-    n_noise.inputs["Scale"].default_value = 0.25
+    n_noise.location = (-200, -150)
+    n_noise.noise_dimensions = '4D'
+    n_noise.inputs["Scale"].default_value = 0.35
+    n_noise.inputs["Detail"].default_value = 2.0
     
+    # Vector Math to center and scale displacement
+    n_vmath = nodes.new("ShaderNodeVectorMath")
+    n_vmath.location = (50, -150)
+    n_vmath.operation = 'SCALE'
+    n_vmath.inputs["Scale"].default_value = 1.8
+    
+    n_pos = nodes.new("GeometryNodeSetPosition")
+    n_pos.location = (50, 150)
+    
+    # Instance on Points
     n_inst = nodes.new("GeometryNodeInstanceOnPoints")
-    n_inst.location = (200, 100)
+    n_inst.location = (280, 150)
     
     n_obj_info = nodes.new("GeometryNodeObjectInfo")
-    n_obj_info.location = (-50, -100)
+    n_obj_info.location = (50, 0)
     n_obj_info.inputs["Object"].default_value = bird_model
     if "As Instance" in n_obj_info.inputs:
         n_obj_info.inputs["As Instance"].default_value = True
         
     n_scale = nodes.new("GeometryNodeScaleInstances")
-    n_scale.location = (400, 100)
+    n_scale.location = (480, 150)
     n_scale.inputs["Scale"].default_value = (0.5, 0.5, 0.5)
     
+    # Node Links
     links.new(n_cube.outputs["Mesh"], n_dist.inputs["Mesh"])
     links.new(n_dist.outputs["Points"], n_pos.inputs["Geometry"])
+    
+    # 4D Noise Time Link (Scene Time -> Math Speed -> Noise W -> Vector Scale -> Set Position Offset)
+    links.new(n_time.outputs["Seconds"], n_math_time.inputs[0])
+    links.new(n_math_time.outputs["Value"], n_noise.inputs["W"])
+    links.new(n_noise.outputs["Color"], n_vmath.inputs["Vector"])
+    links.new(n_vmath.outputs["Vector"], n_pos.inputs["Offset"])
+    
+    # Instancing links
     links.new(n_pos.outputs["Geometry"], n_inst.inputs["Points"])
     links.new(n_obj_info.outputs["Geometry"], n_inst.inputs["Instance"])
     links.new(n_inst.outputs["Instances"], n_scale.inputs["Instances"])
     links.new(n_scale.outputs["Instances"], n_out.inputs["Geometry"])
-    
-    links.new(n_time.outputs["Seconds"], n_noise.inputs["Scale"])
-    links.new(n_noise.outputs["Color"], n_pos.inputs["Offset"])
     
     out_path = os.path.join(TUTORIALS_DIR, "04_geometry_nodes", "04_geometry_nodes.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
