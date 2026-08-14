@@ -236,6 +236,7 @@ def build_03_shading():
             wire_image_tex("Lantern_01_brass_diff_1k.png", "sRGB", "Base Color")
             wire_image_tex("Lantern_01_brass_roughness_1k.png", "Non-Color", "Roughness")
             wire_image_tex("Lantern_01_brass_metallic_1k.png", "Non-Color", "Metallic")
+            wire_image_tex("Lantern_01_brass_opacity_1k.png", "Non-Color", "Alpha")
             wire_image_tex("Lantern_01_brass_nor_gl_1k.png", "Non-Color", "Normal", is_normal=True)
     
     # 2. Side-by-Side Procedural Comparison Shader Balls

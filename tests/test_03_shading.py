@@ -64,8 +64,8 @@ if not image_names:
     sys.exit(3)
 
 packed_count = sum(1 for img in bpy.data.images if img.packed_file is not None)
-if packed_count == 0:
-    print("ERROR: PBR Image textures are not packed into blend file!", file=sys.stderr)
+if packed_count < 5:
+    print(f"ERROR: Expected at least 5 packed PBR textures, found {packed_count}", file=sys.stderr)
     sys.exit(4)
 
 # Pure Scene Policy check: no 3D Text objects in scene

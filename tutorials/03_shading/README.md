@@ -20,16 +20,22 @@
 
 ### 1. 标准图片 PBR 贴图流水线 (Image Texture Pipeline)
 
-在真实工业管线中，一个模型通常由 4~5 张 2D 贴图通过 UV 映射驱动 Principled BSDF：
+在真实工业管线中，一个模型通常由 5 张 2D 贴图通过 UV 映射驱动 Principled BSDF：
 
 ```mermaid
 graph LR
     Diff["Base Color 贴图\n(*_diff_1k.png)\n色彩空间: sRGB"] --> BSDF_Base["Principled BSDF\n[Base Color] 通道"]
     Rough["Roughness 贴图\n(*_roughness_1k.png)\n色彩空间: Non-Color"] --> BSDF_Rough["Principled BSDF\n[Roughness] 通道"]
     Metal["Metallic 贴图\n(*_metallic_1k.png)\n色彩空间: Non-Color"] --> BSDF_Metal["Principled BSDF\n[Metallic] 通道"]
+    Opacity["Opacity 贴图\n(*_opacity_1k.png)\n色彩空间: Non-Color"] --> BSDF_Alpha["Principled BSDF\n[Alpha] 通道"]
     NormalTex["Normal Map 贴图\n(*_nor_gl_1k.png)\n色彩空间: Non-Color"] --> NormalNode["Normal Map 节点\n(RGB 转法线向量)"]
     NormalNode --> BSDF_Normal["Principled BSDF\n[Normal] 通道"]
 ```
+
+> **小贴士：OpenGL (`nor_gl`) vs DirectX (`nor_dx`) 法线格式**
+> - Blender、Maya 与 Godot 默认使用 **OpenGL** 标准（绿色通道 G 为 $+Y$ 向上）。
+> - 虚幻引擎 (Unreal Engine) 与 3ds Max 默认使用 **DirectX** 标准（绿色通道 G 为 $-Y$ 翻转）。
+> - 如果在 Blender 中误用了 DirectX 格式的法线图，只需要在节点图中间加一个 `Invert Color` 节点将 G 通道反相即可！
 
 ### 2. 色彩空间极其重要的黄金法则 (Color Space Rules)
 这是所有 3D 初学者最容易犯错的环节：
