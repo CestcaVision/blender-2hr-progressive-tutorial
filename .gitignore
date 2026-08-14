@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Blender backup files
+*.blend1
+*.blend2
+*.blend@
+*.blend@@
+
+# Temporary and cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
