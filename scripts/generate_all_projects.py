@@ -935,26 +935,39 @@ def build_08_compositing():
     c_nodes.clear()
     
     n_in = c_nodes.new("NodeGroupInput")
-    n_in.location = (-400, 0)
+    n_in.location = (-600, 0)
     
+    # 1. Glare (Fog Glow)
     n_glare = c_nodes.new("CompositorNodeGlare")
-    n_glare.location = (-150, 0)
-    if "Type" in n_glare.inputs:
-        n_glare.inputs["Type"].default_value = 'Fog Glow'
+    n_glare.location = (-350, 0)
+    if hasattr(n_glare, 'glare_type'):
+        n_glare.glare_type = 'FOG_GLOW'
+    if hasattr(n_glare, 'threshold'):
+        n_glare.threshold = 1.2
     if "Threshold" in n_glare.inputs:
         n_glare.inputs["Threshold"].default_value = 1.2
+        
+    # 2. Color Balance (Cinematic Lift/Gamma/Gain)
+    n_color = c_nodes.new("CompositorNodeColorBalance")
+    n_color.location = (-100, 0)
+    if hasattr(n_color, 'correction_method'):
+        n_color.correction_method = 'LIFT_GAMMA_GAIN'
     
+    # 3. Lens Distortion (Chromatic Aberration Dispersion)
     n_lens = c_nodes.new("CompositorNodeLensdist")
-    n_lens.location = (100, 0)
+    n_lens.location = (150, 0)
     n_lens.inputs["Dispersion"].default_value = 0.02
+    if hasattr(n_lens, 'use_fit'):
+        n_lens.use_fit = True
     if "Fit" in n_lens.inputs:
         n_lens.inputs["Fit"].default_value = True
         
     n_out = c_nodes.new("NodeGroupOutput")
-    n_out.location = (350, 0)
+    n_out.location = (400, 0)
     
     c_links.new(n_in.outputs["Image"], n_glare.inputs["Image"])
-    c_links.new(n_glare.outputs["Image"], n_lens.inputs["Image"])
+    c_links.new(n_glare.outputs["Image"], n_color.inputs["Image"])
+    c_links.new(n_color.outputs["Image"], n_lens.inputs["Image"])
     c_links.new(n_lens.outputs["Image"], n_out.inputs["Image"])
     
     out_path = os.path.join(TUTORIALS_DIR, "08_compositing", "08_compositing.blend")

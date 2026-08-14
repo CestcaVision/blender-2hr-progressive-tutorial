@@ -16,12 +16,13 @@
 
 ## 🛠 核心功能与技术点拆解
 
-### 1. 合成节点流架构 (Compositing Node Flow)
+### 1. 合成后期节点核心管道 (Post-Processing Pipeline)
 ```mermaid
 graph LR
-    Input["Render Image / 原始渲染输入"] --> Glare["Glare Node\n(Fog Glow 泛光算法)"]
-    Glare --> Lens["Lens Distortion\n(色散与镜头边缘畸变)"]
-    Lens --> Output["Composite Output\n(最终画幅输出)"]
+    RenderLayer["Render Layers / Group Input\n(三维原始渲染像素输入)"] --> Glare["Glare 节点\n(Fog Glow 雾状发光 / 能量阈值 1.2)"]
+    Glare --> ColorBal["Color Balance 节点\n(电影级色彩平衡 / Lift Gamma Gain)"]
+    ColorBal --> LensDist["Lens Distortion 节点\n(色散 Dispersion 0.02 / 拟真光学色差)"]
+    LensDist --> Output["Composite / Group Output\n(最终合成大片输出)"]
 ```
 
 ### 2. 常用后期合成节点解析
