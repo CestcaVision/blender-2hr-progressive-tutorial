@@ -778,24 +778,21 @@ def build_08_compositing():
     c_tree = bpy.data.node_groups.new("PostProcessCompositor", 'CompositorNodeTree')
     scene.compositing_node_group = c_tree
     
-    c_tree.interface.new_socket(name="Image", in_out='INPUT', socket_type='NodeSocketColor')
     c_tree.interface.new_socket(name="Image", in_out='OUTPUT', socket_type='NodeSocketColor')
     
     c_nodes = c_tree.nodes
     c_links = c_tree.links
     c_nodes.clear()
     
-    # 1. Group Input
-    n_in = c_nodes.new("NodeGroupInput")
-    n_in.location = (-600, 0)
+    # 1. 3D Scene Render Layers Input (Crucial for F12 scene rendering)
+    n_rlayers = c_nodes.new("CompositorNodeRLayers")
+    n_rlayers.location = (-600, 0)
     
     # 2. Glare (Fog Glow)
     n_glare = c_nodes.new("CompositorNodeGlare")
     n_glare.location = (-320, 0)
-    if hasattr(n_glare, 'glare_type'):
-        n_glare.glare_type = 'FOG_GLOW'
-    if hasattr(n_glare, 'threshold'):
-        n_glare.threshold = 0.8
+    if "Type" in n_glare.inputs:
+        n_glare.inputs["Type"].default_value = 'Fog Glow'
     if "Threshold" in n_glare.inputs:
         n_glare.inputs["Threshold"].default_value = 0.8
         
@@ -814,14 +811,18 @@ def build_08_compositing():
     if "Fit" in n_lens.inputs:
         n_lens.inputs["Fit"].default_value = True
         
-    # 5. Group Output
+    # 5. Group Output & Interactive Viewer
     n_out = c_nodes.new("NodeGroupOutput")
     n_out.location = (450, 0)
     
-    c_links.new(n_in.outputs["Image"], n_glare.inputs["Image"])
+    n_viewer = c_nodes.new("CompositorNodeViewer")
+    n_viewer.location = (450, -200)
+    
+    c_links.new(n_rlayers.outputs["Image"], n_glare.inputs["Image"])
     c_links.new(n_glare.outputs["Image"], n_color.inputs["Image"])
     c_links.new(n_color.outputs["Image"], n_lens.inputs["Image"])
     c_links.new(n_lens.outputs["Image"], n_out.inputs["Image"])
+    c_links.new(n_lens.outputs["Image"], n_viewer.inputs["Image"])
     
     out_path = os.path.join(TUTORIALS_DIR, "08_compositing", "08_compositing.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
