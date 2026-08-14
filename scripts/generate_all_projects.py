@@ -186,22 +186,63 @@ def build_02_sculpting():
     render_preview("02_sculpting.png")
 
 # ----------------------------------------------------
-# 03. Shading & PBR Materials
+# 03. Shading & PBR Materials: Image-Based PBR & Procedural Showcase
 # ----------------------------------------------------
 def build_03_shading():
-    print("--- Building 03: Shading & PBR Materials ---")
+    print("--- Building 03: Shading & PBR Materials (Image PBR + Procedural) ---")
     clear_scene()
-    setup_basic_camera_and_light(cam_loc=(0, -5.5, 2.5), cam_rot=(math.radians(68), 0, 0), light_loc=(3, -4, 4))
+    setup_basic_camera_and_light(cam_loc=(0, -6.5, 2.5), cam_rot=(math.radians(70), 0, 0), light_loc=(3, -4, 4))
     
+    # 1. Import Hero CC0 Image-Based PBR Model: Vintage Lantern
+    cache_blend = os.path.join(BASE_DIR, ".cache_pbr", "Lantern_01_1k.blend")
+    tex_dir = os.path.join(BASE_DIR, ".cache_pbr", "textures")
+    
+    if os.path.exists(cache_blend):
+        with bpy.data.libraries.load(cache_blend, link=False) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name in ["Lantern_01", "Lantern_01_glass"]]
+            
+        for obj in data_to.objects:
+            if obj:
+                bpy.context.scene.collection.objects.link(obj)
+                obj.location = (-1.6, 0, 0.1)
+                obj.scale = (1.5, 1.5, 1.5)
+                
+        # Configure Brass Material Image Textures explicitly for crystal clear teaching
+        mat_brass = bpy.data.materials.get("Lantern_01_brass")
+        if mat_brass and mat_brass.node_tree:
+            nodes = mat_brass.node_tree.nodes
+            links = mat_brass.node_tree.links
+            bsdf = nodes.get("Principled BSDF")
+            
+            # Helper to load and wire image
+            def wire_image_tex(img_filename, color_space, target_socket, is_normal=False):
+                img_path = os.path.join(tex_dir, img_filename)
+                if os.path.exists(img_path):
+                    img = bpy.data.images.load(img_path, check_existing=True)
+                    img.colorspace_settings.name = color_space
+                    tex_node = nodes.new("ShaderNodeTexImage")
+                    tex_node.image = img
+                    if is_normal:
+                        norm_node = nodes.new("ShaderNodeNormalMap")
+                        links.new(tex_node.outputs["Color"], norm_node.inputs["Color"])
+                        links.new(norm_node.outputs["Normal"], bsdf.inputs["Normal"])
+                    else:
+                        links.new(tex_node.outputs["Color"], bsdf.inputs[target_socket])
+                        
+            wire_image_tex("Lantern_01_brass_diff_1k.png", "sRGB", "Base Color")
+            wire_image_tex("Lantern_01_brass_roughness_1k.png", "Non-Color", "Roughness")
+            wire_image_tex("Lantern_01_brass_metallic_1k.png", "Non-Color", "Metallic")
+            wire_image_tex("Lantern_01_brass_nor_gl_1k.png", "Non-Color", "Normal", is_normal=True)
+    
+    # 2. Side-by-Side Procedural Comparison Shader Balls
     mat_configs = [
-        {"name": "M_Weathered_Gold", "loc": (-2.2, 0, 0.9), "type": "gold"},
-        {"name": "M_SciFi_Damaged_Armor", "loc": (-0.7, 0, 0.9), "type": "carpaint"},
-        {"name": "M_Subsurface_Jade", "loc": (0.8, 0, 0.9), "type": "jade"},
-        {"name": "M_Dispersion_Glass", "loc": (2.3, 0, 0.9), "type": "glass"}
+        {"name": "M_Procedural_Gold", "loc": (0.8, 0, 0.8), "type": "gold"},
+        {"name": "M_Procedural_Jade", "loc": (2.2, 0, 0.8), "type": "jade"},
+        {"name": "M_Procedural_Glass", "loc": (3.6, 0, 0.8), "type": "glass"}
     ]
     
-    floor = bpy.context.active_object
-    bpy.ops.mesh.primitive_plane_add(size=12, location=(0, 0, 0))
+    # Floor Studio Backdrop
+    bpy.ops.mesh.primitive_plane_add(size=14, location=(0, 0, 0))
     floor = bpy.context.active_object
     floor.name = "Studio_Backdrop"
     floor_mat = bpy.data.materials.new(name="M_Studio_Backdrop")
@@ -212,7 +253,7 @@ def build_03_shading():
     floor.data.materials.append(floor_mat)
     
     for cfg in mat_configs:
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, radius=0.65, location=cfg["loc"])
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, radius=0.6, location=cfg["loc"])
         orb = bpy.context.active_object
         orb.name = f"ShaderBall_{cfg['name']}"
         bpy.ops.object.shade_smooth()
@@ -243,15 +284,6 @@ def build_03_shading():
             bsdf.inputs["Base Color"].default_value = (1.0, 0.78, 0.28, 1.0)
             bsdf.inputs["Metallic"].default_value = 1.0
             bsdf.inputs["Roughness"].default_value = 0.25
-        elif cfg["type"] == "carpaint":
-            bsdf.inputs["Base Color"].default_value = (0.02, 0.25, 0.85, 1.0)
-            bsdf.inputs["Metallic"].default_value = 0.6
-            bsdf.inputs["Roughness"].default_value = 0.3
-            if "Coat" in bsdf.inputs:
-                bsdf.inputs["Coat"].default_value = 1.0
-                bsdf.inputs["Coat Roughness"].default_value = 0.05
-            elif "Clearcoat" in bsdf.inputs:
-                bsdf.inputs["Clearcoat"].default_value = 1.0
         elif cfg["type"] == "jade":
             bsdf.inputs["Base Color"].default_value = (0.1, 0.85, 0.4, 1.0)
             bsdf.inputs["Roughness"].default_value = 0.2
@@ -270,6 +302,13 @@ def build_03_shading():
                 bsdf.inputs["Transmission"].default_value = 1.0
                 
         orb.data.materials.append(mat)
+        
+    # 3. Pack all image textures inside the .blend file (Zero Missing Texture Guarantee)
+    try:
+        bpy.ops.file.pack_all()
+        print("All PBR image textures packed into .blend!")
+    except Exception as e:
+        print("Pack images notice:", e)
         
     out_path = os.path.join(TUTORIALS_DIR, "03_shading", "03_shading.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
