@@ -15,3 +15,5 @@ __pycache__/
 *.pyd
 .pytest_cache/
 .cache_pbr/
+*.blend1
+*.blend@

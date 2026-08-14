@@ -66,8 +66,8 @@ if not cam.dof.use_dof:
     print("ERROR: Camera must have Depth of Field (DoF) enabled", file=sys.stderr)
     sys.exit(5)
 
-if cam.dof.aperture_fstop > 2.8:
-    print(f"ERROR: Camera fstop {cam.dof.aperture_fstop} should be <= 2.8 for cinematic bokeh", file=sys.stderr)
+if cam.dof.aperture_fstop != 2.0:
+    print(f"ERROR: Expected camera fstop 2.0, got {cam.dof.aperture_fstop}", file=sys.stderr)
     sys.exit(6)
 
 # Verify Color Management

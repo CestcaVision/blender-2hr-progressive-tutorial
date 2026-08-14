@@ -798,10 +798,36 @@ def build_07_lighting_rendering():
             bsdf_hero.inputs["Transmission"].default_value = 0.95
     hero.data.materials.append(mat_hero)
     
-    # Studio Backdrop
+    # Studio Backdrop (Seamless Curved Infinity Cove)
     bpy.ops.mesh.primitive_plane_add(size=16, location=(0, 0, 0))
     backdrop = bpy.context.active_object
     backdrop.name = "Curved_Studio_Backdrop"
+    
+    # Extrude back edge up and bevel corner for smooth infinity curve
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_mode(type='EDGE')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    
+    import bmesh
+    bm = bmesh.from_edit_mesh(backdrop.data)
+    for edge in bm.edges:
+        if edge.verts[0].co.y > 7.0 and edge.verts[1].co.y > 7.0:
+            edge.select = True
+            break
+    bmesh.update_edit_mesh(backdrop.data)
+    
+    bpy.ops.mesh.extrude_edges_move(TRANSFORM_OT_translate={"value": (0, 0, 8.0)})
+    
+    # Bevel the corner
+    bm = bmesh.from_edit_mesh(backdrop.data)
+    for edge in bm.edges:
+        if abs(edge.verts[0].co.z) < 0.1 and edge.verts[0].co.y > 7.0:
+            edge.select = True
+    bmesh.update_edit_mesh(backdrop.data)
+    bpy.ops.mesh.bevel(offset=4.0, segments=12)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.shade_smooth()
+    
     mat_back = bpy.data.materials.new(name="M_Dark_Studio_Floor")
     bsdf_back = mat_back.node_tree.nodes.get("Principled BSDF")
     if bsdf_back:
