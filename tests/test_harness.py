@@ -65,6 +65,7 @@ class TestCoreHarnessAndStandards(unittest.TestCase):
         cmd = ["blender", "--background", "--python", script_path]
         res = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, f"Blender script execution failed with stderr:\n{res.stderr}\nstdout:\n{res.stdout}")
+        self.assertNotIn("Traceback (most recent call last)", res.stderr, "Blender execution should not produce Python tracebacks")
 
 if __name__ == "__main__":
     unittest.main()
