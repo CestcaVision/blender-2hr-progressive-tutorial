@@ -850,6 +850,13 @@ def build_07_lighting_rendering():
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
     
+    # Color Management (AgX / Medium High Contrast)
+    scene.view_settings.view_transform = 'AgX'
+    try:
+        scene.view_settings.look = 'AgX - Medium High Contrast'
+    except Exception as e:
+        print("Set look notice:", e)
+        
     out_path = os.path.join(TUTORIALS_DIR, "07_lighting_rendering", "07_lighting_rendering.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
     print(f"Saved: {out_path}")
