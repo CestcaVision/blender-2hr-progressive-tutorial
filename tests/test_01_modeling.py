@@ -77,10 +77,31 @@ sys.exit(0)
         res = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, f"Blender scene inspection failed:\n{res.stderr}\n{res.stdout}")
 
-    def test_04_render_preview(self):
-        """Verify render preview image exists and is non-empty."""
-        self.assertTrue(os.path.isfile(RENDER_PNG), f"Render output {RENDER_PNG} must exist")
-        self.assertGreater(os.path.getsize(RENDER_PNG), 10000)
+    def test_04_dynamic_headless_render(self):
+        """Verify 01_modeling.blend renders dynamically without errors via Blender CLI."""
+        test_out = os.path.join(BASE_DIR, "renders", "test_01_modeling_dynamic.png")
+        if os.path.exists(test_out):
+            os.remove(test_out)
+            
+        render_cmd = [
+            "blender",
+            BLEND_FILE,
+            "--background",
+            "--render-output", test_out,
+            "--render-frame", "1"
+        ]
+        res = subprocess.run(render_cmd, capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"Dynamic render failed:\n{res.stderr}\n{res.stdout}")
+        
+        # Blender appends frame number, e.g. test_01_modeling_dynamic.png0001 or .png
+        possible_files = [test_out, test_out + "0001.png", test_out.replace(".png", "0001.png")]
+        found = any(os.path.isfile(f) and os.path.getsize(f) > 5000 for f in possible_files)
+        self.assertTrue(found, "Dynamic rendered output image must exist and have content")
+        
+        # Clean up temporary test render
+        for f in possible_files:
+            if os.path.exists(f):
+                os.remove(f)
 
 if __name__ == "__main__":
     unittest.main()
