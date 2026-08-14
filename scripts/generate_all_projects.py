@@ -589,9 +589,37 @@ def build_05_character_animation():
     b_leg_r.tail = (0.2, 0, 0.0)
     b_leg_r.parent = b_root
     
+    # Bone Parenting for articulated character hierarchy
+    head.parent = rig
+    head.parent_type = 'BONE'
+    head.parent_bone = 'Head'
+    
+    eye_l.parent = head
+    eye_r.parent = head
+    
+    torso.parent = rig
+    torso.parent_type = 'BONE'
+    torso.parent_bone = 'Chest'
+    
+    arm_l.parent = rig
+    arm_l.parent_type = 'BONE'
+    arm_l.parent_bone = 'Arm_L'
+    
+    arm_r.parent = rig
+    arm_r.parent_type = 'BONE'
+    arm_r.parent_bone = 'Arm_R'
+    
+    leg_l.parent = rig
+    leg_l.parent_type = 'BONE'
+    leg_l.parent_bone = 'Leg_L'
+    
+    leg_r.parent = rig
+    leg_r.parent_type = 'BONE'
+    leg_r.parent_bone = 'Leg_R'
+    
     bpy.ops.object.mode_set(mode='OBJECT')
     
-    # Keyframes
+    # Keyframes: Facial Shape Keys (Frames 1-120)
     sk_blink.value = 0.0
     sk_blink.keyframe_insert(data_path="value", frame=1)
     sk_blink.value = 1.0
@@ -606,6 +634,13 @@ def build_05_character_animation():
     sk_smile.value = 0.0
     sk_smile.keyframe_insert(data_path="value", frame=75)
     
+    sk_mouth_open.value = 0.0
+    sk_mouth_open.keyframe_insert(data_path="value", frame=40)
+    sk_mouth_open.value = 0.8
+    sk_mouth_open.keyframe_insert(data_path="value", frame=55)
+    sk_mouth_open.value = 0.0
+    sk_mouth_open.keyframe_insert(data_path="value", frame=70)
+    
     sk_surprise.value = 0.0
     sk_surprise.keyframe_insert(data_path="value", frame=75)
     sk_surprise.value = 1.0
@@ -613,7 +648,9 @@ def build_05_character_animation():
     sk_surprise.value = 0.0
     sk_surprise.keyframe_insert(data_path="value", frame=120)
     
+    # Armature Wave Keyframes (Frames 1-120)
     bpy.context.view_layer.objects.active = rig
+    rig.select_set(True)
     bpy.ops.object.mode_set(mode='POSE')
     pb_arm_r = rig.pose.bones.get("Arm_R")
     if pb_arm_r:
@@ -628,8 +665,7 @@ def build_05_character_animation():
         pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=70)
         pb_arm_r.rotation_euler = (0, 0, 0)
         pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=120)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
+        
     bpy.context.scene.frame_end = 120
     out_path = os.path.join(TUTORIALS_DIR, "05_character_animation", "05_character_animation.blend")
     bpy.ops.wm.save_as_mainfile(filepath=out_path)
