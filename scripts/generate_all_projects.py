@@ -728,15 +728,15 @@ def build_06_physics():
     ball.data.materials.append(mat_ball)
     
     bpy.ops.mesh.primitive_cylinder_add(radius=0.4, depth=1.2, location=(2.8, 0, 0.6))
-    table = bpy.context.active_object
-    table.name = "Cloth_Collision_Pillar"
+    pillar = bpy.context.active_object
+    pillar.name = "Cloth_Collision_Pillar"
     bpy.ops.object.modifier_add(type='COLLISION')
     mat_pillar = bpy.data.materials.new(name="M_Collision_Pillar")
     bsdf_pillar = mat_pillar.node_tree.nodes.get("Principled BSDF")
     if bsdf_pillar:
         bsdf_pillar.inputs["Base Color"].default_value = (0.7, 0.72, 0.75, 1.0)
         bsdf_pillar.inputs["Roughness"].default_value = 0.3
-    table.data.materials.append(mat_pillar)
+    pillar.data.materials.append(mat_pillar)
     
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=24, y_subdivisions=24, size=1.5, location=(2.8, 0, 1.5))
     cloth = bpy.context.active_object
@@ -746,6 +746,8 @@ def build_06_physics():
     cloth_mod.settings.mass = 0.2
     cloth_mod.collision_settings.use_collision = True
     cloth_mod.collision_settings.use_self_collision = True
+    cloth_mod.point_cache.frame_start = 1
+    cloth_mod.point_cache.frame_end = 150
     
     subdiv = cloth.modifiers.new("Subdivision", 'SUBSURF')
     subdiv.levels = 1
