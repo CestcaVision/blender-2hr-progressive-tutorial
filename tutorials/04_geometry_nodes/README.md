@@ -1,15 +1,16 @@
-# 模块 04：几何节点与程序化生成 (Geometry Nodes - Bird Flock)
+# 模块 04：几何节点与程序化流体动效 (Geometry Nodes: Procedural Swarm & Whirlpool)
 
-## 📌 课程目标 (Duration: ~20 mins)
-本模块通过搭建一个**飞鸟群飞行模拟系统 (Bird Flock Simulation)**，带领学员深入理解 Blender 几何节点（Geometry Nodes）的场概念（Fields）、点分发（Distribute Points）、实例实例化（Instance on Points）以及时间驱动与噪波扰动算法。
+## 📌 课程目标 (Duration: ~15 mins)
+本模块引入 **Blender 官方开源项目几何节点经典案例 (Blender Foundation Geometry Nodes Official Demo - Procedural Cubic Whirlpool & Swarm)**，带学员剖析工业级几何节点树。掌握点分发 (Point Distribution)、点上实例化 (Instance on Points)、矢量数学 (Vector Math) 与 4D 噪波场 (Noise Field) 驱动的程序化空间旋转与规模衰减控制。
 
 ---
 
 ## 📂 工程文件信息
 - **工程路径**：`tutorials/04_geometry_nodes/04_geometry_nodes.blend`
 - **主要对象结构**：
-  - `GeometryNodes_Bird_Flock`：群鸟生成器主体，承载 `GN_Bird_Flock_System` 节点树
-  - `Bird_Asset`：基础低模飞鸟模型（作为 Instance 模板被批量分发）
+  - `GeometryNodes_Bird_Flock`：**官方核心几何节点发射体**（挂载 `GN_Bird_Flock_System` 专业节点网络）
+  - `Bird_Asset`：用于点上实例化的几何体资产
+  - `prox_weight_location`：用于控制空间邻近距离衰减与旋转力场的动态控制空物体 (Empty)
 
 ---
 

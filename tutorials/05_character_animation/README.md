@@ -1,18 +1,17 @@
-# 模块 05：角色动画、骨骼装配与面部形态键 (Character Animation, Armature Rigging & Shape Keys)
+# 模块 05：角色动画、骨骼装配与面部形态键 (Character Animation: Blender Studio Open Movie Character Rig)
 
 ## 📌 课程目标 (Duration: ~15 mins)
-本模块引入 **Blender 官方开源项目基础拓扑人头资产 (Blender Foundation Human Base Meshes - Stylized Character Head)**，让学员接触真正符合工业级循环边拓扑（Edge Loops）的面部资产。系统学习在生产级角色上构建 **Armature 骨架装配**、姿态模式 (Pose Mode) 摆姿动效、4 组核心**面部表情形态键 (Facial Shape Keys: 眨眼/微笑/张嘴/惊讶)** 以及时间线曲线混合控制。
+本模块引入 **Blender Studio 官方开源大电影《Sprite Fright》女主角艾莉专业角色工程 (Blender Studio "Ellie" Production Rig & Pose Library)**，让学员直观接触好莱坞/国际院线级角色资产。掌握工业级骨骼体系 (Armature Hierarchy)、姿态模式 (Pose Mode)、姿态库资产 (Pose Assets)、挥手动画关键帧与面部形态键（`Blink`, `Smile`, `OpenMouth`, `Surprise`）的高阶混合驱动。
 
 ---
 
 ## 📂 工程文件信息
 - **工程路径**：`tutorials/05_character_animation/05_character_animation.blend`
 - **主要对象结构**：
-  - `Char_Head`：**官方标准环形拓扑角色人头**（包含 `Basis`, `Blink`, `Smile`, `OpenMouth`, `Surprise` 5 组形态键）
-  - `Char_Eye_L` / `Char_Eye_R`：官方写实眼球眼眶
-  - `Char_Torso`, `Char_Arm_L`/`R`, `Char_Leg_L`/`R`：机械/躯干肢体组件
-  - `Char_Armature`：包含 7 根骨骼（Root, Chest, Head, Arm_L, Arm_R, Leg_L, Leg_R）的关节骨架体系
-- **时间线预设**：第 1~120 帧已包含一段挥手动作与表情情绪转换的关键帧动画。
+  - `Char_Armature` (`RIG-Ellie`)：**Blender Studio 官方影视级全身绑定骨架**（包含千余根专业控制骨骼、IK/FK 切换与姿态库）
+  - `Char_Head` (`GEO-ellie_head` / `GEO-ellie_body`)：**官方高精度角色头部与五官**（内嵌眨眼、微笑、口型与表情形态键）
+  - `Animation Camera`：官方影视预设电影运镜摄影机
+- **时间线预设**：第 1~120 帧包含官方挥手动画（`Ellie full waving`）与面部表情情绪律动。
 
 ---
 

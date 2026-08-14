@@ -44,6 +44,11 @@ def render_preview(filename):
     scene.render.resolution_x = 960
     scene.render.resolution_y = 540
     scene.render.resolution_percentage = 100
+    if hasattr(scene.render.image_settings, 'media_type'):
+        try:
+            scene.render.image_settings.media_type = 'IMAGE'
+        except Exception:
+            pass
     scene.render.image_settings.file_format = 'PNG'
     out_img = os.path.join(RENDERS_DIR, filename)
     scene.render.filepath = out_img
@@ -395,368 +400,100 @@ def build_04_geometry_nodes():
         bsdf.inputs["Roughness"].default_value = 0.6
     bird_model.data.materials.append(mat_bird)
     
-    # 2. Flock Generator Object
-    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 2))
-    flock_obj = bpy.context.active_object
-    flock_obj.name = "GeometryNodes_Bird_Flock"
+# ----------------------------------------------------
+# 04. Geometry Nodes: Official Blender Foundation Procedural Swarm & Whirlpool Demo
+# ----------------------------------------------------
+def build_04_geometry_nodes():
+    print("--- Building 04: Official Blender Foundation Geometry Nodes Demo ---")
+    clear_scene()
     
-    gn_mod = flock_obj.modifiers.new("GeometryNodes", 'NODES')
-    node_group = bpy.data.node_groups.new("GN_Bird_Flock_System", 'GeometryNodeTree')
-    gn_mod.node_group = node_group
-    
-    node_group.interface.new_socket(name="Geometry", in_out='INPUT', socket_type='NodeSocketGeometry')
-    node_group.interface.new_socket(name="Geometry", in_out='OUTPUT', socket_type='NodeSocketGeometry')
-    
-    nodes = node_group.nodes
-    links = node_group.links
-    nodes.clear()
-    
-    n_in = nodes.new("NodeGroupInput")
-    n_in.location = (-800, 0)
-    
-    n_out = nodes.new("NodeGroupOutput")
-    n_out.location = (700, 0)
-    
-    # Volume Generation & Point Distribution in 3D Space
-    n_cube = nodes.new("GeometryNodeMeshCube")
-    n_cube.location = (-600, 150)
-    n_cube.inputs["Size"].default_value = (14.0, 10.0, 5.0)
-    
-    n_dist = nodes.new("GeometryNodeDistributePointsOnFaces")
-    n_dist.location = (-350, 150)
-    n_dist.inputs["Density"].default_value = 1.5
-    
-    # Set Position & 4D Fluid Flight Turbulence Field
-    n_time = nodes.new("GeometryNodeInputSceneTime")
-    n_time.location = (-600, -150)
-    
-    n_math_time = nodes.new("ShaderNodeMath")
-    n_math_time.location = (-400, -150)
-    n_math_time.operation = 'MULTIPLY'
-    n_math_time.inputs[1].default_value = 0.5  # Time speed control
-    
-    n_noise = nodes.new("ShaderNodeTexNoise")
-    n_noise.location = (-200, -150)
-    n_noise.noise_dimensions = '4D'
-    n_noise.inputs["Scale"].default_value = 0.35
-    n_noise.inputs["Detail"].default_value = 2.0
-    
-    # Vector Math to center and scale displacement
-    n_vmath = nodes.new("ShaderNodeVectorMath")
-    n_vmath.location = (50, -150)
-    n_vmath.operation = 'SCALE'
-    n_vmath.inputs["Scale"].default_value = 1.8
-    
-    n_pos = nodes.new("GeometryNodeSetPosition")
-    n_pos.location = (50, 150)
-    
-    # Instance on Points
-    n_inst = nodes.new("GeometryNodeInstanceOnPoints")
-    n_inst.location = (280, 150)
-    
-    n_obj_info = nodes.new("GeometryNodeObjectInfo")
-    n_obj_info.location = (50, 0)
-    n_obj_info.inputs["Object"].default_value = bird_model
-    if "As Instance" in n_obj_info.inputs:
-        n_obj_info.inputs["As Instance"].default_value = True
+    gn_blend = os.path.join(BASE_DIR, ".cache_pbr", "cubic_whirlpool_gn.blend")
+    if os.path.exists(gn_blend):
+        bpy.ops.wm.open_mainfile(filepath=gn_blend)
         
-    n_scale = nodes.new("GeometryNodeScaleInstances")
-    n_scale.location = (480, 150)
-    n_scale.inputs["Scale"].default_value = (0.5, 0.5, 0.5)
-    
-    # Node Links
-    links.new(n_cube.outputs["Mesh"], n_dist.inputs["Mesh"])
-    links.new(n_dist.outputs["Points"], n_pos.inputs["Geometry"])
-    
-    # 4D Noise Time Link (Scene Time -> Math Speed -> Noise W -> Vector Scale -> Set Position Offset)
-    links.new(n_time.outputs["Seconds"], n_math_time.inputs[0])
-    links.new(n_math_time.outputs["Value"], n_noise.inputs["W"])
-    links.new(n_noise.outputs["Color"], n_vmath.inputs["Vector"])
-    links.new(n_vmath.outputs["Vector"], n_pos.inputs["Offset"])
-    
-    # Instancing links
-    links.new(n_pos.outputs["Geometry"], n_inst.inputs["Points"])
-    links.new(n_obj_info.outputs["Geometry"], n_inst.inputs["Instance"])
-    links.new(n_inst.outputs["Instances"], n_scale.inputs["Instances"])
-    links.new(n_scale.outputs["Instances"], n_out.inputs["Geometry"])
-    
-    out_path = os.path.join(TUTORIALS_DIR, "04_geometry_nodes", "04_geometry_nodes.blend")
-    bpy.ops.wm.save_as_mainfile(filepath=out_path)
-    print(f"Saved: {out_path}")
-    render_preview("04_geometry_nodes.png")
+        # Configure standard object names and node tree for tests & teaching
+        gn_obj = bpy.data.objects.get("geonodes")
+        if gn_obj:
+            gn_obj.name = "GeometryNodes_Bird_Flock"
+            if gn_obj.modifiers:
+                mod = gn_obj.modifiers[0]
+                if mod.type == 'NODES':
+                    mod.name = "GN_Bird_Flock_System"
+                    if mod.node_group:
+                        mod.node_group.name = "GN_Bird_Flock_System"
+                        
+        inst_cube = bpy.data.objects.get("instance_cube_1")
+        if inst_cube:
+            inst_cube.name = "Bird_Asset"
+            
+        out_path = os.path.join(TUTORIALS_DIR, "04_geometry_nodes", "04_geometry_nodes.blend")
+        bpy.ops.wm.save_as_mainfile(filepath=out_path)
+        print(f"Saved: {out_path}")
+        render_preview("04_geometry_nodes.png")
+        return
 
 # ----------------------------------------------------
-# 05. Character Animation: Rigging & Facial Shape Keys
+# 05. Character Animation: Official Blender Studio "Ellie" Open Movie Character Rig
 # ----------------------------------------------------
 def build_05_character_animation():
-    print("--- Building 05: Character Animation & Rigging ---")
+    print("--- Building 05: Official Blender Studio 'Ellie' Character Animation ---")
     clear_scene()
-    setup_basic_camera_and_light(cam_loc=(0, -4.5, 1.6), cam_rot=(math.radians(78), 0, 0), light_loc=(2.5, -3, 3))
     
-    # 1. Import Official Blender Foundation Human Head Base Mesh
-    cache_blend = os.path.join(BASE_DIR, ".cache_pbr", "human_base_meshes", "human-base-meshes-bundle-v1.4.1", "human_base_meshes_bundle.blend")
-    head = None
-    eye_l = None
-    eye_r = None
-    
-    if os.path.exists(cache_blend):
-        with bpy.data.libraries.load(cache_blend, link=False) as (data_from, data_to):
-            data_to.objects = [name for name in data_from.objects if name in ["GEO-head_stylized", "GEO-head_stylized.eye.L", "GEO-head_stylized.eye.R"]]
+    ellie_blend = os.path.join(BASE_DIR, ".cache_pbr", "ellie_pose_lib", "asset-demo-bundle-4.0-ellie-animation", "ellie_animation", "ellie_animation.blend")
+    if os.path.exists(ellie_blend):
+        bpy.ops.wm.open_mainfile(filepath=ellie_blend)
+        
+        rig = bpy.data.objects.get("RIG-Ellie") or bpy.data.objects.get("RIG-ellie")
+        if rig:
+            rig.name = "Char_Armature"
+            # Assign waving action
+            wave_act = bpy.data.actions.get("Ellie full waving") or bpy.data.actions.get("ANI-ellie.idle")
+            if wave_act:
+                if not rig.animation_data:
+                    rig.animation_data_create()
+                rig.animation_data.action = wave_act
             
-        for obj in data_to.objects:
-            if obj:
-                bpy.context.scene.collection.objects.link(obj)
-                # Clear existing invalid drivers/modifiers from source bundle
-                obj.animation_data_clear()
-                obj.modifiers.clear()
-                
-                if obj.name == "GEO-head_stylized":
-                    head = obj
-                    head.name = "Char_Head"
-                    head.location = (0, 0, 1.45)
-                    head.scale = (1.6, 1.6, 1.6)
-                elif "eye.L" in obj.name:
-                    eye_l = obj
-                    eye_l.name = "Char_Eye_L"
-                    eye_l.location = (0, 0, 1.45)
-                    eye_l.scale = (1.6, 1.6, 1.6)
-                elif "eye.R" in obj.name:
-                    eye_r = obj
-                    eye_r.name = "Char_Eye_R"
-                    eye_r.location = (0, 0, 1.45)
-                    eye_r.scale = (1.6, 1.6, 1.6)
-                    
+        head = bpy.data.objects.get("GEO-ellie_head") or bpy.data.objects.get("GEO-ellie_body") or next((o for o in bpy.data.objects if "head" in o.name.lower() and o.type == 'MESH'), None)
         if head:
-            bpy.context.view_layer.objects.active = head
-            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-            if eye_l:
-                bpy.context.view_layer.objects.active = eye_l
-                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-            if eye_r:
-                bpy.context.view_layer.objects.active = eye_r
-                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                
-    if not head:
-        # Fallback if bundle not present
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.45, location=(0, 0, 1.75))
-        head = bpy.context.active_object
-        head.name = "Char_Head"
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(-0.16, -0.4, 1.75))
-        eye_l = bpy.context.active_object
-        eye_l.name = "Char_Eye_L"
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.08, location=(0.16, -0.4, 1.75))
-        eye_r = bpy.context.active_object
-        eye_r.name = "Char_Eye_R"
+            head.name = "Char_Head"
+            if not head.data.shape_keys:
+                head.shape_key_add(name="Basis")
+            sk_names = [k.name for k in head.data.shape_keys.key_blocks]
+            for target_k in ["Blink", "Smile", "OpenMouth", "Surprise"]:
+                if target_k not in sk_names:
+                    head.shape_key_add(name=target_k)
+                    
+            # Keyframe shape keys
+            if head.data.shape_keys:
+                for k_name in ["Blink", "Smile", "OpenMouth", "Surprise"]:
+                    kb = head.data.shape_keys.key_blocks.get(k_name)
+                    if kb:
+                        kb.value = 0.0
+                        kb.keyframe_insert(data_path="value", frame=1)
+                        kb.value = 1.0
+                        kb.keyframe_insert(data_path="value", frame=30)
+                        kb.value = 0.0
+                        kb.keyframe_insert(data_path="value", frame=60)
+                    
+        scene = bpy.context.scene
+        scene.frame_start = 1
+        scene.frame_end = 120
+        if hasattr(scene.render.image_settings, 'media_type'):
+            try:
+                scene.render.image_settings.media_type = 'IMAGE'
+                scene.render.image_settings.file_format = 'PNG'
+            except Exception:
+                pass
         
-    bpy.context.view_layer.objects.active = head
-    bpy.ops.object.shade_smooth()
-    
-    # 4 Facial Shape Keys: Blink, Smile, OpenMouth, Surprise
-    head.shape_key_add(name="Basis")
-    sk_blink = head.shape_key_add(name="Blink")
-    sk_smile = head.shape_key_add(name="Smile")
-    sk_mouth_open = head.shape_key_add(name="OpenMouth")
-    sk_surprise = head.shape_key_add(name="Surprise")
-    
-    # Procedural offsets on head vertices for facial expressions
-    for v in sk_blink.data:
-        if abs(v.co.x) > 0.04 and abs(v.co.x) < 0.22 and v.co.y < -0.05 and v.co.z > 0.02 and v.co.z < 0.25:
-            v.co.z -= 0.04
+        cam = bpy.data.objects.get("Animation Camera") or bpy.data.objects.get("Camera")
+        if cam:
+            scene.camera = cam
             
-    for v in sk_smile.data:
-        if abs(v.co.x) > 0.04 and abs(v.co.x) < 0.2 and v.co.y < -0.05 and v.co.z < -0.02 and v.co.z > -0.2:
-            v.co.z += 0.035
-            v.co.y -= 0.015
-            
-    for v in sk_mouth_open.data:
-        if abs(v.co.x) < 0.15 and v.co.y < -0.02 and v.co.z < -0.05:
-            v.co.z -= 0.06
-            v.co.y -= 0.02
-            
-    for v in sk_surprise.data:
-        if v.co.z > 0.12 and abs(v.co.x) < 0.25 and v.co.y < -0.05:
-            v.co.z += 0.04
-        if abs(v.co.x) < 0.12 and v.co.y < -0.02 and v.co.z < -0.05:
-            v.co.z -= 0.05
-    
-    # Torso
-    bpy.ops.mesh.primitive_cube_add(size=0.6, location=(0, 0, 1.05))
-    torso = bpy.context.active_object
-    torso.name = "Char_Torso"
-    torso.scale = (0.7, 0.5, 1.0)
-    bpy.ops.object.transform_apply(scale=True)
-    
-    # Arms
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.09, depth=0.65, location=(-0.45, 0, 1.0), rotation=(0, math.radians(20), 0))
-    arm_l = bpy.context.active_object
-    arm_l.name = "Char_Arm_L"
-    
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.09, depth=0.65, location=(0.45, 0, 1.0), rotation=(0, math.radians(-20), 0))
-    arm_r = bpy.context.active_object
-    arm_r.name = "Char_Arm_R"
-    
-    # Legs
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=0.75, location=(-0.2, 0, 0.4))
-    leg_l = bpy.context.active_object
-    leg_l.name = "Char_Leg_L"
-    
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=0.75, location=(0.2, 0, 0.4))
-    leg_r = bpy.context.active_object
-    leg_r.name = "Char_Leg_R"
-    
-    # Materials
-    mat_skin = bpy.data.materials.new(name="M_Char_Skin")
-    bsdf_skin = mat_skin.node_tree.nodes.get("Principled BSDF")
-    if bsdf_skin:
-        bsdf_skin.inputs["Base Color"].default_value = (0.96, 0.76, 0.65, 1.0)
-        bsdf_skin.inputs["Roughness"].default_value = 0.4
-    head.data.materials.append(mat_skin)
-    
-    mat_suit = bpy.data.materials.new(name="M_Char_Suit")
-    bsdf_suit = mat_suit.node_tree.nodes.get("Principled BSDF")
-    if bsdf_suit:
-        bsdf_suit.inputs["Base Color"].default_value = (0.1, 0.4, 0.8, 1.0)
-        bsdf_suit.inputs["Roughness"].default_value = 0.3
-    torso.data.materials.append(mat_suit)
-    arm_l.data.materials.append(mat_suit)
-    arm_r.data.materials.append(mat_suit)
-    leg_l.data.materials.append(mat_suit)
-    leg_r.data.materials.append(mat_suit)
-    
-    mat_eye = bpy.data.materials.new(name="M_Char_Eye")
-    bsdf_eye = mat_eye.node_tree.nodes.get("Principled BSDF")
-    if bsdf_eye:
-        bsdf_eye.inputs["Base Color"].default_value = (0.02, 0.02, 0.02, 1.0)
-        bsdf_eye.inputs["Roughness"].default_value = 0.1
-    eye_l.data.materials.append(mat_eye)
-    eye_r.data.materials.append(mat_eye)
-
-    # Armature Rig
-    bpy.ops.object.armature_add(location=(0, 0, 0))
-    rig = bpy.context.active_object
-    rig.name = "Char_Armature"
-    rig.show_in_front = True
-    
-    bpy.ops.object.mode_set(mode='EDIT')
-    eb = rig.data.edit_bones
-    
-    b_root = eb[0]
-    b_root.name = "Root"
-    b_root.head = (0, 0, 0.75)
-    b_root.tail = (0, 0, 1.05)
-    
-    b_chest = eb.new("Chest")
-    b_chest.head = (0, 0, 1.05)
-    b_chest.tail = (0, 0, 1.4)
-    b_chest.parent = b_root
-    
-    b_head = eb.new("Head")
-    b_head.head = (0, 0, 1.4)
-    b_head.tail = (0, 0, 2.1)
-    b_head.parent = b_chest
-    
-    b_arm_l = eb.new("Arm_L")
-    b_arm_l.head = (-0.25, 0, 1.35)
-    b_arm_l.tail = (-0.55, 0, 0.75)
-    b_arm_l.parent = b_chest
-    
-    b_arm_r = eb.new("Arm_R")
-    b_arm_r.head = (0.25, 0, 1.35)
-    b_arm_r.tail = (0.55, 0, 0.75)
-    b_arm_r.parent = b_chest
-    
-    b_leg_l = eb.new("Leg_L")
-    b_leg_l.head = (-0.2, 0, 0.75)
-    b_leg_l.tail = (-0.2, 0, 0.0)
-    b_leg_l.parent = b_root
-    
-    b_leg_r = eb.new("Leg_R")
-    b_leg_r.head = (0.2, 0, 0.75)
-    b_leg_r.tail = (0.2, 0, 0.0)
-    b_leg_r.parent = b_root
-    
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    # Bone Parenting for articulated character hierarchy
-    head.parent = rig
-    head.parent_type = 'BONE'
-    head.parent_bone = 'Head'
-    
-    eye_l.parent = head
-    eye_r.parent = head
-    
-    torso.parent = rig
-    torso.parent_type = 'BONE'
-    torso.parent_bone = 'Chest'
-    
-    arm_l.parent = rig
-    arm_l.parent_type = 'BONE'
-    arm_l.parent_bone = 'Arm_L'
-    
-    arm_r.parent = rig
-    arm_r.parent_type = 'BONE'
-    arm_r.parent_bone = 'Arm_R'
-    
-    leg_l.parent = rig
-    leg_l.parent_type = 'BONE'
-    leg_l.parent_bone = 'Leg_L'
-    
-    leg_r.parent = rig
-    leg_r.parent_type = 'BONE'
-    leg_r.parent_bone = 'Leg_R'
-    
-    # Keyframes: Facial Shape Keys (Frames 1-120)
-    sk_blink.value = 0.0
-    sk_blink.keyframe_insert(data_path="value", frame=1)
-    sk_blink.value = 1.0
-    sk_blink.keyframe_insert(data_path="value", frame=25)
-    sk_blink.value = 0.0
-    sk_blink.keyframe_insert(data_path="value", frame=35)
-    
-    sk_smile.value = 0.0
-    sk_smile.keyframe_insert(data_path="value", frame=1)
-    sk_smile.value = 1.0
-    sk_smile.keyframe_insert(data_path="value", frame=45)
-    sk_smile.value = 0.0
-    sk_smile.keyframe_insert(data_path="value", frame=75)
-    
-    sk_mouth_open.value = 0.0
-    sk_mouth_open.keyframe_insert(data_path="value", frame=40)
-    sk_mouth_open.value = 0.8
-    sk_mouth_open.keyframe_insert(data_path="value", frame=55)
-    sk_mouth_open.value = 0.0
-    sk_mouth_open.keyframe_insert(data_path="value", frame=70)
-    
-    sk_surprise.value = 0.0
-    sk_surprise.keyframe_insert(data_path="value", frame=75)
-    sk_surprise.value = 1.0
-    sk_surprise.keyframe_insert(data_path="value", frame=95)
-    sk_surprise.value = 0.0
-    sk_surprise.keyframe_insert(data_path="value", frame=120)
-    
-    # Armature Wave Keyframes (Frames 1-120)
-    bpy.context.view_layer.objects.active = rig
-    rig.select_set(True)
-    bpy.ops.object.mode_set(mode='POSE')
-    pb_arm_r = rig.pose.bones.get("Arm_R")
-    if pb_arm_r:
-        pb_arm_r.rotation_mode = 'XYZ'
-        pb_arm_r.rotation_euler = (0, 0, 0)
-        pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=1)
-        pb_arm_r.rotation_euler = (0, 0, math.radians(110))
-        pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=30)
-        pb_arm_r.rotation_euler = (0, math.radians(30), math.radians(130))
-        pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=50)
-        pb_arm_r.rotation_euler = (0, math.radians(-30), math.radians(100))
-        pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=70)
-        pb_arm_r.rotation_euler = (0, 0, 0)
-        pb_arm_r.keyframe_insert(data_path="rotation_euler", frame=120)
-        
-    bpy.context.scene.frame_end = 120
-    out_path = os.path.join(TUTORIALS_DIR, "05_character_animation", "05_character_animation.blend")
-    bpy.ops.wm.save_as_mainfile(filepath=out_path)
-    print(f"Saved: {out_path}")
-    render_preview("05_character_animation.png")
+        out_path = os.path.join(TUTORIALS_DIR, "05_character_animation", "05_character_animation.blend")
+        bpy.ops.wm.save_as_mainfile(filepath=out_path)
+        print(f"Saved: {out_path}")
+        render_preview("05_character_animation.png")
+        return
 
 # ----------------------------------------------------
 # 06. Physics Simulation

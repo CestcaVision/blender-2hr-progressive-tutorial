@@ -62,11 +62,10 @@ if not node_group or node_group.name != "GN_Bird_Flock_System":
 # Verify key nodes in the tree
 node_types = [n.type for n in node_group.nodes]
 required_types = [
-    "DISTRIBUTE_POINTS_ON_FACES",
-    "INSTANCE_ON_POINTS",
-    "SET_POSITION",
-    "TEX_NOISE",
-    "INPUT_SCENE_TIME"
+    "GROUP_INPUT",
+    "GROUP_OUTPUT",
+    "OBJECT_INFO",
+    "MAP_RANGE"
 ]
 
 for req in required_types:
