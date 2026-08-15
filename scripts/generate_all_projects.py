@@ -491,6 +491,9 @@ def build_05_character_animation():
         scene = bpy.context.scene
         scene.frame_start = 1
         scene.frame_end = 120
+        scene.render.resolution_x = 1920
+        scene.render.resolution_y = 1080
+        scene.render.resolution_percentage = 100
         if hasattr(scene.render.image_settings, 'media_type'):
             try:
                 scene.render.image_settings.media_type = 'IMAGE'
