@@ -15,16 +15,37 @@
 
 ---
 
+### 1. Blender Studio 《Sprite Fright》官方教程与资源出处
+- **官方开源电影**：Blender Studio 第 13 部开源大电影《Sprite Fright》(2021)，由前 Pixar 故事总监 Matthew Luhn 执导、Hjalti Hjalmarsson 担任动画总监。
+- **官方教程与制作文档**：
+  1. **[Blender Studio Sprite Fright Production Hub](https://studio.blender.org/films/sprite-fright/)**：包含全片所有制作镜头分解、角色资产库与原画概念图。
+  2. **[Character Rigging with CloudRig (绑定系统精讲)](https://studio.blender.org/training/cloudrig/)**：由 Blender Studio 首席绑定师 Demeter Dzadik 主讲，深入剖析 Ellie 角色的骨架体系与驱动器（Drivers）实现。
+  3. **[Animating with the Pose Library (姿态库动画实战)](https://studio.blender.org/training/pose-library-training/)**：由动画总监 Hjalti Hjalmarsson 详细讲解如何利用姿态库快速做表情混合与肢体节奏。
+
+---
+
 ## 🛠 核心功能与技术点拆解
 
-### 1. 面部表情形态键 (Facial Shape Keys)
+### 1. 在 Sprite Fright / Ellie 中调整面部表情与 Shape Key 的三种工作流
+
+#### 🔹 工作流 A：姿态库资产交互混合 (Asset Browser / Pose Library) —— 【最推荐】
+1. 在窗口底部或侧边调出 **Asset Browser (资产浏览器)**，或在 **Pose Mode (姿态模式)** 下按 `N` 打开右侧栏进入 **Animation** 选项卡。
+2. 过滤资产库中的 **Ellie** 表情预设（包含 `Ellie mouth smileopen`, `Ellie mouth smileclosed`, `Ellie eyemask closed` 闭眼, `Ellie face excited` 兴奋, `Ellie eyemask scared` 惊恐）。
+3. 选中角色面部骨骼，点击姿态库资产并左右拖拽鼠标，即可实现 $0\% \sim 100\%$ 的交互式平滑表情混合，随后按 `I` 键打入关键帧。
+
+#### 🔹 工作流 B：骨骼控制器驱动 (Pose Mode Bone Controllers & Drivers) —— 【工业级正统】
+- **原理**：在影视级生产管线中，网格形态键（Shape Keys）通常挂接在面部骨骼控制柄上（通过 Drivers 驱动器实时映射）。
+- **操作**：
+  - 选中 `Char_Armature`，按 `Ctrl + Tab` 进入 **Pose Mode**。
+  - 选择嘴角控制骨骼（`MSTR-mouth`）、眼睑控制骨骼（`eyelid`）或眉毛控制骨骼（`brow`），按 `G`（移动）或 `R`（旋转），即可实时拉扯嘴唇与眼眶，底层自动驱动形态键。
+
+#### 🔹 工作流 C：原生网格形态键调整与自制 (Mesh Data Shape Keys)
 - **原理**：Shape Key 记录网格顶点相对于基础状态（`Basis`）的相对偏移向量，通过 `0.0 ~ 1.0` 的权重滑块实现平滑形变混合。
-- **本工程 4 组形态键**：
-  1. `Blink` (眨眼)：上下眼睑闭合。
-  2. `Smile` (微笑)：嘴角向上向后拉伸，颧肌上提。
-  3. `OpenMouth` (张嘴)：下颌骨部位顶点下移，用于口型发音匹配。
-  4. `Surprise` (惊讶)：眉毛挑起，嘴巴形成 "O" 型。
-- **关键帧记录**：在属性面板的 Shape Keys 列表上，将鼠标悬停在 `Value` 滑块上按 `I` 键即可直接插入表情关键帧。
+- **操作与打帧**：
+  1. 选中角色头部 `Char_Head`，在右侧属性面板进入 **Data (网格数据属性 - 绿色倒三角)** $\rightarrow$ **Shape Keys (形态键)**。
+  2. 调节 `Blink` (眨眼)、`Smile` (微笑)、`OpenMouth` (张嘴)、`Surprise` (惊讶) 的 `Value` 滑块。
+  3. 鼠标悬停在 `Value` 滑块上按 `I` 键即可插入表情动画关键帧。
+- **新建自制表情**：点击右侧 `+` 新建形态键（如 `Wink_L`） $\rightarrow$ 保持该形态键选中，进入 **Sculpt Mode (雕刻模式)** 或 **Edit Mode (编辑模式)** 调整面部顶点 $\rightarrow$ 退出后即可获得属于您自己的全新表情滑块！
 
 ### 2. 骨骼装配与层次关系 (Armature Rigging)
 - **骨骼层级链**：
