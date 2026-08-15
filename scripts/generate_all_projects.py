@@ -501,6 +501,43 @@ def build_05_character_animation():
             except Exception:
                 pass
         
+        # Lighting Setup (Key, Fill, Rim & Ambient Sky)
+        if scene.world and scene.world.node_tree:
+            bg = scene.world.node_tree.nodes.get('Background')
+            if bg:
+                bg.inputs['Color'].default_value = (0.08, 0.09, 0.12, 1.0)
+                bg.inputs['Strength'].default_value = 1.0
+                
+        # Key Light
+        key_data = bpy.data.lights.new('Key_Light', type='AREA')
+        key_data.energy = 80.0
+        key_data.size = 2.0
+        key_data.color = (1.0, 0.95, 0.88)
+        key_obj = bpy.data.objects.new('Key_Light', key_data)
+        key_obj.location = (-1.8, -2.5, 2.4)
+        key_obj.rotation_euler = (math.radians(55), 0, math.radians(-35))
+        scene.collection.objects.link(key_obj)
+
+        # Fill Light
+        fill_data = bpy.data.lights.new('Fill_Light', type='AREA')
+        fill_data.energy = 35.0
+        fill_data.size = 2.5
+        fill_data.color = (0.85, 0.92, 1.0)
+        fill_obj = bpy.data.objects.new('Fill_Light', fill_data)
+        fill_obj.location = (2.0, -2.0, 2.0)
+        fill_obj.rotation_euler = (math.radians(50), 0, math.radians(40))
+        scene.collection.objects.link(fill_obj)
+
+        # Rim Light
+        rim_data = bpy.data.lights.new('Rim_Light', type='SPOT')
+        rim_data.energy = 150.0
+        rim_data.spot_size = math.radians(65)
+        rim_data.color = (1.0, 0.98, 0.9)
+        rim_obj = bpy.data.objects.new('Rim_Light', rim_data)
+        rim_obj.location = (0.8, 2.2, 2.8)
+        rim_obj.rotation_euler = (math.radians(-45), 0, math.radians(160))
+        scene.collection.objects.link(rim_obj)
+        
         cam = bpy.data.objects.get("Animation Camera") or bpy.data.objects.get("Camera")
         if cam:
             scene.camera = cam
