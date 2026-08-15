@@ -459,12 +459,12 @@ def build_05_character_animation():
         rig = bpy.data.objects.get("RIG-Ellie") or bpy.data.objects.get("RIG-ellie")
         if rig:
             rig.name = "Char_Armature"
-            # Assign waving action
-            wave_act = bpy.data.actions.get("Ellie full waving") or bpy.data.actions.get("ANI-ellie.idle")
-            if wave_act:
+            # Assign official multi-frame character motion animation (ANI-ellie.idle)
+            anim_act = bpy.data.actions.get("ANI-ellie.idle") or bpy.data.actions.get("Ellie full waving")
+            if anim_act:
                 if not rig.animation_data:
                     rig.animation_data_create()
-                rig.animation_data.action = wave_act
+                rig.animation_data.action = anim_act
             
         head = bpy.data.objects.get("GEO-ellie_head") or bpy.data.objects.get("GEO-ellie_body") or next((o for o in bpy.data.objects if "head" in o.name.lower() and o.type == 'MESH'), None)
         if head:
